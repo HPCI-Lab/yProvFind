@@ -1,6 +1,6 @@
 from elasticsearch import AsyncElasticsearch
 from loggin.logging_config import get_logger
-
+from settings import settings
 
 logger = get_logger(__name__)
 
@@ -15,7 +15,7 @@ class ElasticSearchConnection: #classe per gestire la connessione a elasticsearc
         if self.client is None:
             logger.debug("Connecting to Elasticsearch...")
             self.client = AsyncElasticsearch(hosts=self.host,
-                                             basic_auth=("elastic", "3_rc51nu6W0lGEf*Mj-P"),
+                                             basic_auth=(settings.ES_USER, settings.ES_PASSWORD),
                                             verify_certs=False) #qua non inizia la connessione ma settiamo solo l'host (volendo host puo essere una lista di host)
             try:
                 await self.client.info()
