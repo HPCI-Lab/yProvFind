@@ -1,12 +1,15 @@
 import uvicorn
 from application.app import get_app
+from loggin.logging_config import setup_logging
+import logging
 
 app = get_app()
 
+setup_logging(level=logging.DEBUG)
 
 if __name__ == "__main__":
     uvicorn.run(
         app=app,
-        port=8000,
+        port=8001,
         reload=False
     )

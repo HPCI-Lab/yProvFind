@@ -4,9 +4,9 @@ from services import providers
 from dishka import make_async_container
 from dishka.integrations.fastapi import setup_dishka
 from services.elasticSearch.connection import ElasticSearchConnection
-from loggin.logging_config import get_logger
+import logging
 
-logger = get_logger(__name__)
+logger = logging.getLogger(__name__)
 
 def get_app():
     app=FastAPI()
@@ -22,7 +22,7 @@ def get_app():
 
     @app.on_event("startup") #forziamo la connessione ad elastichsearch all'avvio
     async def startup_event():
-        logger.info("crazione connessione elasticsearch")
+        
         async with container() as request_container: #la funzione container() ci restituisce un context manager per interagire con il container 
             await request_container.get(ElasticSearchConnection) #diciamo al container il servizio che vogliamo attivare
         logger.info("connessione elasticsearch creata")
