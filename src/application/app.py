@@ -3,7 +3,7 @@ from routers.root import root_routes
 from services import providers
 from dishka import make_async_container
 from dishka.integrations.fastapi import setup_dishka
-from services.elasticSearch.connection import ElasticSearchConnection
+from services.elasticSearch.es_connection import ElasticSearchConnection
 import logging
 
 logger = logging.getLogger(__name__)
@@ -25,5 +25,5 @@ def get_app():
         
         async with container() as request_container: #la funzione container() ci restituisce un context manager per interagire con il container 
             await request_container.get(ElasticSearchConnection) #diciamo al container il servizio che vogliamo attivare
-        logger.info("connessione elasticsearch creata")
+        
     return app

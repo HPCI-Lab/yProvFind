@@ -1,6 +1,6 @@
 import logging
 from settings import settings
-from .connection import ElasticSearchConnection
+from .es_connection import ElasticSearchConnection
 from dishka import Provider, provide, Scope
 from typing import AsyncGenerator
 
