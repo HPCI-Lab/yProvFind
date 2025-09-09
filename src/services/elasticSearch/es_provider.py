@@ -1,6 +1,7 @@
 import logging
 from settings import settings
 from .es_connection import ElasticSearchConnection
+from .multi_match_search import Multi_match_search
 from dishka import Provider, provide, Scope
 from typing import AsyncGenerator
 
@@ -15,7 +16,6 @@ class ElasticSearchService(Provider): #estensione della factory class Provider d
         conn=ElasticSearchConnection(host=settings.ES_HOST) #qua diamo l'host al gestore della connessione() potrebbe essere anche una lista)
         try:
             await conn.connect()
-            logger.info("ElasticSearch connection established")
             yield conn
         except Exception as e:
             logger.error(f"Failed to connect to ElasticSearch: {e}")
@@ -23,3 +23,10 @@ class ElasticSearchService(Provider): #estensione della factory class Provider d
         finally:
             await conn.close()
             logger.info("ElasticSearch connection closed")
+
+
+
+class Multi_match_search_provider(Provider):
+    @provide(scope=Scope.REQUEST)
+    async def queryservice(self, es_conn: ElasticSearchConnection) -> Multi_match_search:
+        return Multi_match_search(es_conn)

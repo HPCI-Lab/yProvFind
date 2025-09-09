@@ -38,7 +38,6 @@ class DocumentFetcher:
                 async with aiofiles.open(filepath, mode='r', encoding='utf-8') as f:
                     content = await f.read()
                     doc = json.loads(content)
-                    logger.debug(f"Pronto per indicizzare: {doc}")
                     yield {"_index": settings.INDEX_NAME, "_source": doc}   #posso usare i generator con elastic search perche che sia una lista o un generator essi fanno parte della sottocategoria di iterator                                                        
                                                                         #e le api bulk di elasticsearch accettano qualsiasi iteratore e quindi anche un generator va bene
                                                                         #questo è utile perche con i generator non c'è da salvare in memoria una lista ma funziona poco alla volta e quindi scalabile anche su migliaia di file

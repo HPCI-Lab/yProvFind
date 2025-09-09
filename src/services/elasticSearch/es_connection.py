@@ -19,7 +19,7 @@ class ElasticSearchConnection: #classe per gestire la connessione a elasticsearc
                                             verify_certs=False) #qua non inizia la connessione ma settiamo solo l'host (volendo host puo essere una lista di host)
             try:
                 await self.client.info()
-                logger.debug("Elasticsearch client connected successfully.") #viene scritto solo se await non fallisce 
+                logger.info("Elasticsearch client connected successfully.") #viene scritto solo se await non fallisce 
                 
             except Exception as e: 
                 logger.error(f"ElastichSearch connection error: {e}")
