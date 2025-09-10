@@ -1,10 +1,11 @@
 import logging
 from fastapi import  APIRouter, Query
 from dishka.integrations.fastapi import FromDishka, DishkaRoute
-from services.elasticSearch.multi_match_search import Multi_match_search
+from services.elasticSearch.query_search.multi_match_search import Multi_match_search
 from typing import Annotated
 
 logger= logging.getLogger(__name__)
+
 
 
 query_router = APIRouter(route_class=DishkaRoute,

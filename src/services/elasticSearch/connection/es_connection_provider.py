@@ -1,7 +1,7 @@
 import logging
 from settings import settings
 from .es_connection import ElasticSearchConnection
-from .multi_match_search import Multi_match_search
+from ..query_search.multi_match_search import Multi_match_search
 from dishka import Provider, provide, Scope
 from typing import AsyncGenerator
 
@@ -25,8 +25,3 @@ class ElasticSearchService(Provider): #estensione della factory class Provider d
             logger.info("ElasticSearch connection closed")
 
 
-
-class Multi_match_search_provider(Provider):
-    @provide(scope=Scope.REQUEST)
-    async def queryservice(self, es_conn: ElasticSearchConnection) -> Multi_match_search:
-        return Multi_match_search(es_conn)

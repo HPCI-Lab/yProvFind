@@ -2,7 +2,7 @@ from dishka import Provider, provide, Scope
 import logging
 from .fetcher import DocumentFetcher
 from .indexer import Indexer
-from services.elasticSearch.es_connection import ElasticSearchConnection
+from services.elasticSearch.connection.es_connection import ElasticSearchConnection
 
 logger =logging.getLogger(__name__)
 

@@ -3,7 +3,7 @@ from routers.root import root_routes
 from services import providers
 from dishka import make_async_container
 from dishka.integrations.fastapi import setup_dishka
-from services.elasticSearch.es_connection import ElasticSearchConnection
+from services.elasticSearch.connection.es_connection import ElasticSearchConnection
 from services.document_fetcher.indexer import Indexer
 import logging
 

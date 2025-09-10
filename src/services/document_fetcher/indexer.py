@@ -1,6 +1,6 @@
 
 import logging
-from services.elasticSearch.es_connection import ElasticSearchConnection
+from services.elasticSearch.connection.es_connection import ElasticSearchConnection
 from .fetcher import DocumentFetcher
 from elasticsearch.helpers import async_bulk
 
@@ -15,11 +15,16 @@ class Indexer:
 
     async def bulk_indexer(self): 
         documents=self.fetcher.fetch_documents_async()
-        success, errors = await async_bulk(self.es_conn.client, documents)#le bulk di elastich search sono in grado di prendere degli iteratori in modo da poter inserire migliaia di docuemnti senza dover passare liste grandi di dati
+
+        try: 
+            success, errors = await async_bulk(self.es_conn.client, documents)#le bulk di elastich search sono in grado di prendere degli iteratori in modo da poter inserire migliaia di docuemnti senza dover passare liste grandi di dati
+            
+            
+            if errors: 
+                for err in errors:
+                    logger.error(f"Errore indicizzazione documento {err.get('index', {}).get('_id')}: {err}")
+            
+            logger.info(f"Indicizzati {success} documenti, {len(errors)} errori")
         
-        
-        if errors: 
-            for err in errors:
-                logger.error(f"Errore indicizzazione documento {err.get('index', {}).get('_id')}: {err}")
-        
-        logger.info(f"Indicizzati {success} documenti, {len(errors)} errori")
+        except Exception as e: 
+            logger.error(f"errors occurs during the fetch of all the files: {e}")
