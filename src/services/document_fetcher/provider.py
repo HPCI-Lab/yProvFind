@@ -12,6 +12,8 @@ class DocumentFetcherProvider(Provider):
     async def fetch_all(self) -> DocumentFetcher:
         return DocumentFetcher()
     
+
+    
 class BulkIndexerProvider(Provider):
     @provide(scope=Scope.REQUEST)
     async def get_indexer(

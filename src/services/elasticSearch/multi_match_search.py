@@ -13,12 +13,12 @@ class Multi_match_search:
             "query": {
                 "multi_match": {
                     "query": query,
-                        "fields": ["title^3", "description", "keywords"]  # boost su title
+                    "fields": ["title^3", "description", "keywords"]  # boost su title
                                 }
                     },
                     
         }
-        resp = await self.client.search(index=settings.INDEX_NAME, query=body, size=10)
+        resp = await self.client.search(index=settings.INDEX_NAME, body=body, size=10)
         return resp["hits"]["hits"]
         
         
