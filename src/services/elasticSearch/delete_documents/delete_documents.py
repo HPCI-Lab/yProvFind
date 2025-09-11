@@ -1,7 +1,8 @@
 import logging
 from ..connection.es_connection import ElasticSearchConnection
 from settings import settings
-
+from elasticsearch import NotFoundError
+import elasticsearch.exceptions as ElasticsearchException
 
 logger = logging.getLogger(__name__)
 
@@ -26,12 +27,30 @@ class delete_documents:
                 f"failures={resp.get('failures')}"
             )
             return {
+                "status": "success",
                 "index": index_name,
                 "total": resp.get("total"),
                 "deleted": resp.get("deleted"),
                 "failures": resp.get("failures"),
             }
+        except NotFoundError:
+            logger.warning(f"Index '{index_name}' not found")
+            return {
+                "status": "error",
+                "message": "Index not found",
+                "index": index_name
+            }
+        except ElasticsearchException as e:
+            logger.error(f"Elasticsearch error during deletion in index '{index_name}': {e}")
+            return {
+                "status": "error", 
+                "message": f"Elasticsearch error: {str(e)}",
+                "index": index_name
+            }
         except Exception as e:
-            logger.error(f"errors occurred during the elimination of alla documents in the index {index_name}: {e}")
-        
-
+            logger.error(f"Unexpected error during deletion in index '{index_name}': {e}")
+            return {
+                "status": "error",
+                "message": f"Unexpected error: {str(e)}",
+                "index": index_name
+            }

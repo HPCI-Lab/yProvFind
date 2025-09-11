@@ -25,6 +25,14 @@ class Indexer:
                     logger.error(f"Errore indicizzazione documento {err.get('index', {}).get('_id')}: {err}")
             
             logger.info(f"Indicizzati {success} documenti, {len(errors)} errori")
+
+            return {
+                "success_count": success,
+                "error_count": len(errors),
+                "has_errors": len(errors) > 0
+            }
+        
         
         except Exception as e: 
             logger.error(f"errors occurs during the fetch of all the files: {e}")
+            raise

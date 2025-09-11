@@ -21,8 +21,8 @@ class Multi_match_search:
             }
             resp = await self.client.search(index=settings.INDEX_NAME, body=body, size=10)
             return resp["hits"]["hits"]
-        
+
         except Exception as e:
             logger.error(f"error occour during the multi_match search: {e}")
-        
+            raise
         
