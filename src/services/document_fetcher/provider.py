@@ -3,6 +3,7 @@ import logging
 from .fetcher import DocumentFetcher
 from .indexer import Indexer
 from services.elasticSearch.connection.es_connection import ElasticSearchConnection
+from services.embedding.embedding_service import EmbeddingService
 
 logger =logging.getLogger(__name__)
 
@@ -19,9 +20,10 @@ class BulkIndexerProvider(Provider):
     async def get_indexer(
         self,
         es_conn: "ElasticSearchConnection",
-        fetcher: "DocumentFetcher"
+        fetcher: "DocumentFetcher",
+        embedder: "EmbeddingService"
     ) -> Indexer:
-        return Indexer(es_conn, fetcher)
+        return Indexer(es_conn, fetcher, embedder)
 
 
 

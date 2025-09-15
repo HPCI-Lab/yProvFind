@@ -18,7 +18,7 @@ fetch_router= APIRouter(route_class=DishkaRoute,
 async def fetch_all( fetcher: Annotated[Indexer, FromDishka()] ):
     try:
         logger.info("fetch di tutti i documenti")
-        result = await fetcher.bulk_indexer()
+        result = await fetcher.bulk_indexer_embeddings()
         logger.debug("fetch eseguito")
         return {
             "status": "completed",

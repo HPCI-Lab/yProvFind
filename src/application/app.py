@@ -29,7 +29,7 @@ def get_app():
 
             #a connessione stabilita indicizziamo tutti i file presi da yProvStore e li indicizziamo in elastic Search
             indexer = await request_container.get(Indexer)
-            await indexer.bulk_indexer()#qua viene avviata
+            await indexer.bulk_indexer_embeddings()#qua viene avviata
             
 
     return app

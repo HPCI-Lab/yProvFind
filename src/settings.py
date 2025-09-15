@@ -5,6 +5,7 @@ class Settings(BaseSettings):
     ES_USER: str
     ES_PASSWORD: str
     INDEX_NAME: str = "documents"   
+    BATCH_SIZE: int
 
     class Config:
         env_file =".env"

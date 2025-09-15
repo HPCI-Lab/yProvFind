@@ -3,15 +3,18 @@ import logging
 from services.elasticSearch.connection.es_connection import ElasticSearchConnection
 from .fetcher import DocumentFetcher
 from elasticsearch.helpers import async_bulk
-
+from services.embedding.embedding_service import EmbeddingService
+from settings import settings
+from typing import List, Dict
 
 logger =logging.getLogger(__name__)
 
 
 class Indexer:
-    def __init__(self, es_conn: ElasticSearchConnection, fetcher: DocumentFetcher):
+    def __init__(self, es_conn: ElasticSearchConnection, fetcher: DocumentFetcher, embedder: EmbeddingService):
         self.es_conn=es_conn
         self.fetcher=fetcher #il fetcher restituisce un generatore (iteratore)
+        self.embedder= embedder
 
     async def bulk_indexer(self): 
         documents=self.fetcher.fetch_documents_async()
@@ -36,3 +39,45 @@ class Indexer:
         except Exception as e: 
             logger.error(f"errors occurs during the fetch of all the files: {e}")
             raise
+
+
+    async def bulk_indexer_embeddings(self, batch_size : int = settings.BATCH_SIZE):
+        total_success=0
+        total_errors=[]
+
+        batch=[]
+
+        documents= self.fetcher.fetch_documents_async()
+        async for doc in documents:
+            batch.append(doc)
+
+            if len(batch)>settings.BATCH_SIZE:
+                success, errors = await self._process_and_index_batch(batch)
+                total_success += success
+                total_errors.extend(errors)
+
+                batch=[]
+
+        if batch: 
+            success, errors = await self._process_and_index_batch(batch)
+            total_success += success
+            total_errors.extend(errors)
+        
+        return {
+            "success_count": total_success,
+            "error_count": len(total_errors),
+            "has_errors": len(total_errors) > 0
+        }
+
+
+
+    async def _process_and_index_batch(self, batch: List[Dict]):
+        try: 
+            enriched_batch = await self.embedder.add_embeddings_to_batch(batch)
+
+            success, errors = await async_bulk(self.es_conn.client, enriched_batch)
+            return success, errors
+        except Exception as e:
+            logger.error(f"Errore processing batch: {e}")
+            return 0, [{"error": str(e)} for _ in batch]                     
+        

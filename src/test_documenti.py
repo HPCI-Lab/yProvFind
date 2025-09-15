@@ -1,6 +1,7 @@
 from elasticsearch import AsyncElasticsearch
 import asyncio
 
+
 async def main():
     es = AsyncElasticsearch(
         hosts="https://localhost:9200",
