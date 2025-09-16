@@ -81,3 +81,18 @@ class Indexer:
             logger.error(f"Errore processing batch: {e}")
             return 0, [{"error": str(e)} for _ in batch]                     
         
+
+
+    async def check_current_mapping(self):
+        try:
+            response = await self.es_conn.client.indices.get_mapping(index= "documents")
+            logger.debug(f"mappatura attuale:{response}")
+            
+            mapping = response["documents"]["mappings"]["properties"]
+            if "semantic_embedding" in mapping:
+                print(f"Campo semantic_embedding: {mapping['semantic_embedding']}")
+            else:
+                print("Campo semantic_embedding NON trovato!")
+            
+        except Exception as e:
+            print(f"Errore nel controllo mapping: {e}")

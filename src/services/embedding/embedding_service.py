@@ -66,3 +66,23 @@ class EmbeddingService:
             # Fallback se non c'è contenuto
             return "No content available"
         
+
+    async def _get_query_embedding(self, query: str) -> List[float]:
+        """
+        Converte la query dell'utente in embedding
+        """
+        try:
+            # Usa lo stesso embedding service dell'indexing
+            embedding = await asyncio.to_thread(
+                self.model.encode,
+                [query],
+                convert_to_tensor=False,
+                normalize_embeddings=True
+            )
+            return embedding[0].tolist()
+            
+        except Exception as e:
+            logger.error(f"Errore nel calcolo embedding per query '{query}': {e}")
+            raise
+
+        
