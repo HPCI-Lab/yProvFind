@@ -3,7 +3,7 @@ from fastapi import APIRouter, HTTPException
 from dishka.integrations.fastapi import DishkaRoute, FromDishka
 from typing import Annotated
 from services.elasticSearch.connection.es_connection import ElasticSearchConnection
-from services.document_fetcher.indexer import Indexer
+from services.fetch_and_index.indexer import Indexer
 
 
 logger = logging.getLogger(__name__)

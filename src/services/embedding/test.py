@@ -1,7 +1,7 @@
 from embedding_service import EmbeddingService
 from elasticsearch import AsyncElasticsearch
 import asyncio
-from ..document_fetcher.fetcher import DocumentFetcher
+from ..fetch_and_index.fetcher import DocumentFetcher
 from logging import getLogger
 import json
 

@@ -1,7 +1,7 @@
 import logging
 from settings import settings
 from .es_connection import ElasticSearchConnection
-from ..query_search.multi_match_search import Multi_match_search
+from ..search_documents.multi_match_search import Multi_match_search
 from dishka import Provider, provide, Scope
 from typing import AsyncGenerator
 

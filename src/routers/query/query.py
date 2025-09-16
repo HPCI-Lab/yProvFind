@@ -2,7 +2,7 @@ import logging
 
 from fastapi import  APIRouter, Query, HTTPException
 from dishka.integrations.fastapi import FromDishka, DishkaRoute
-from services.elasticSearch.query_search.multi_match_search import Multi_match_search
+from services.elasticSearch.search_documents.multi_match_search import Multi_match_search
 from typing import Annotated #annotated è linguaggio standard python e serve per aggiungere metadata ai type hints
                             # va usato qunado potrebbe andare in conflitto con fastapi, come in questo caso degli endpoint
                             #invece qunando creiamo classi con l'injection non serve perche __init__ è gestito da dishka

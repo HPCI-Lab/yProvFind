@@ -1,6 +1,6 @@
 import logging
 from sentence_transformers import SentenceTransformer
-from services.document_fetcher.fetcher import DocumentFetcher
+from services.fetch_and_index.fetcher import DocumentFetcher
 
 from typing import Dict, List
 import asyncio

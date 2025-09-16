@@ -2,7 +2,7 @@ import logging
 from fastapi import APIRouter
 from fastapi import  APIRouter, Query, HTTPException
 from dishka.integrations.fastapi import FromDishka, DishkaRoute
-from services.elasticSearch.query_search.semantic_search import SemanticSearch
+from services.elasticSearch.search_documents.semantic_search import SemanticSearch
 from typing import Annotated, List , Dict, Any
 logger = logging.getLogger(__name__)
 
