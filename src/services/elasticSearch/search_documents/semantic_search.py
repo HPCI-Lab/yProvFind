@@ -77,13 +77,14 @@ class SemanticSearch():
         query: str,
         size: int = 10,
         text_boost: float = 1.0,
-        semantic_boost: float = 1.0
+        semantic_boost: float = 1.0,
+        timeout: float= 30
     ) -> List[Dict[str, Any]]:
         """
         Ricerca ibrida usando le funzionalità native di Elasticsearch 8.0+
         Utilizza il nuovo 'hybrid' retriever
         """
-        try:
+        async def _perform_search():
             query_embedding = await self.embedder._get_query_embedding(query)
                 
             search_body = {
@@ -130,9 +131,18 @@ class SemanticSearch():
                 results.append(result)
                 
             return results
-            
+
+        try:
+            results = await asyncio.wait_for(_perform_search(), timeout= timeout)
+            logger.info(f"Ricerca completata: {len(results)} risultati per '{query}'")
+            return results
+
+        except asyncio.TimeoutError:
+            logger.error(f"Timeout ({timeout}s) durante la ricerca semantica per '{query}'")
+            raise Exception(f"Ricerca timeout dopo {timeout} secondi")
         except Exception as e:
-            logger.error(f"Errore ricerca ibrida native: {str(e)}")
+            logger.error(f"Errore ricerca hybrid search: {str(e)}")
             raise
+
 
     

@@ -28,6 +28,7 @@ def get_app():
                 await request_container.get(ElasticSearchConnection)
                 indexer= await request_container.get(Indexer)
                 await indexer.bulk_indexer_embeddings()
+                await indexer.check_current_mapping()
             except Exception as e:
                 logger.exception(f"errore nello starter {e}")
         

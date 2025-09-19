@@ -13,10 +13,19 @@ root_routes = APIRouter(route_class=DishkaRoute)
 
 
 
-root_routes.include_router(query_router) # /search endpoint per fare le query
-root_routes.include_router(delete_router)
-root_routes.include_router(fetch_router)
-root_routes.include_router(semantic_query_router)
+
+
+
+all_routes : tuple [APIRouter,...] = (
+                    query_router,
+                    delete_router,
+                    fetch_router,
+                    semantic_query_router
+                )
+
+
+for rout in all_routes:
+    root_routes.include_router(rout)
 
 
 @root_routes.get("/", tags=["general"])

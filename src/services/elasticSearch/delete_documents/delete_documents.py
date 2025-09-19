@@ -8,7 +8,7 @@ logger = logging.getLogger(__name__)
 
 
 
-class delete_documents:
+class DeleteDocuments:
     def __init__ (self, es_conn: ElasticSearchConnection):
         self.client= es_conn.client
 
@@ -53,4 +53,35 @@ class delete_documents:
                 "status": "error",
                 "message": f"Unexpected error: {str(e)}",
                 "index": index_name
+            }
+        
+
+
+        
+    async def delete_index(self, index_name:str):
+
+        try:
+            results = await self.client.indices.delete(index=index_name)
+            logger.debug(f"eliminated index: {index_name}")
+            return {
+                "status": "success",
+                "index" : index_name,
+                
+            }
+        
+        except NotFoundError:
+            logger.error("index not found")
+            return {
+                "status": "error",
+                "index": index_name,
+                "message": "index not found"
+                
+            }
+
+        except Exception as e:
+            logger.error("index not eliminated")
+            return {
+                "status": "error",
+                "index": index_name,
+                "message": "internal error"
             }

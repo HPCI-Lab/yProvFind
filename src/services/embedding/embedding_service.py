@@ -17,16 +17,20 @@ class EmbeddingService:
     async def add_embeddings_to_batch(self, documents: List[Dict]) -> List[Dict]:
         
         try: 
+            #asyncio.gather(*[...]) esegue operazioni asincrone in parallelo
             texts = await asyncio.gather(*[self._combine_fields(doc) for doc in documents])
             logger.debug(f"Calcolo embeddings per {len(texts)} documenti")
 
+
+
+            #asyncio.to_thread() esegue codice sincrono in un thread separato
+            #self.model.encode() è SINCRONO ma pesante computazionalmente
             embeddings = await asyncio.to_thread(
                 self.model.encode, 
                 texts,
-                convert_to_tensor=False,  # Vogliamo liste Python, non tensori
+                convert_to_tensor=False,  # restituisce liste Python, non tensori
                 normalize_embeddings=True  # Normalizza per cosine similarity
             )
-
 
             enriched_documents= []
             for doc, embedding in zip(documents, embeddings):
@@ -56,15 +60,28 @@ class EmbeddingService:
         """
         title = document.get('_source', {}).get('title', '').strip()
         description = document.get('_source', {}).get('description', '').strip()
-        if title and description:
-            return f"{title}. {title}. {description}"
-        elif title:
-            return title
-        elif description:
-            return description
+        keywords = document.get('_source', {}).get('keywords', [])
+
+        # Se keywords è una lista, la trasformo in stringa
+        keywords_text = ', '.join([kw.strip() for kw in keywords if isinstance(kw, str)])
+
+
+
+        full_text = []
+
+        if title:
+            full_text.append(title)
+        if description:
+            full_text.append(description)
+        if keywords:
+            full_text.append(f"Keywords:{keywords}")
+        if full_text:
+            return '.'.join(full_text)
         else:
-            # Fallback se non c'è contenuto
-            return "No content available"
+            return "no content avaible"
+
+
+ 
         
 
     async def _get_query_embedding(self, query: str) -> List[float]:

@@ -21,9 +21,9 @@ query_router = APIRouter(route_class=DishkaRoute,
 #qua usiamo Annotated perche aggiungiamo al type hint "Multi_match_search" il metadata "FromDishka"
 #questo ci serve perche cosi qunado fast aspi va a vedere il tipe hint e legge dai metadati FromDishka lascia gestire la dipendenza a dishka invece che usare le sue
 @query_router.get("", response_model=None)
-async def search(query: str, service: Annotated[Multi_match_search, FromDishka()]):
+async def search(query: str, multi_match_search: Annotated[Multi_match_search, FromDishka()]):
     try:
-        results = await service.search(query)
+        results = await multi_match_search.search(query)
         return {"query": query, "results": results}
     except Exception:
         raise HTTPException(status_code=500, detail="Search service unavailable")
