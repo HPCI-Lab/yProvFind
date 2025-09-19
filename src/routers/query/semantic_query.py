@@ -14,27 +14,14 @@ semantic_query_router= APIRouter(route_class= DishkaRoute,
 
 @semantic_query_router.get("/simple")
 async def semantic_search_endpoint(query: str, semantic: Annotated[SemanticSearch, FromDishka()])-> List[Dict[str, Any]]:
-    try:
-        results = await semantic.semantic_search(query)
-        return results
-
-    except Exception as e:
-        logger.error(f"Errore durante la ricerca semantica: {str(e)}")
-        raise HTTPException(
-            status_code=500, 
-            detail=f"Errore durante la ricerca: {str(e)}"
-        )
+    return await semantic.semantic_search(query)
     
+
 @semantic_query_router.get("/hybrid_search")
 async def hybrid_search_endpoint(query:str, semantic: Annotated[SemanticSearch, FromDishka()])->List[Dict[str, Any]]:
-    try: 
-        results= await semantic.hybrid_search_native(query)
-        return results
+    return await semantic.hybrid_search_native(query)
 
-    except Exception as e: 
-        logger.error(f"Errore durante la ricerca ibrida: {str(e)}")
-        raise HTTPException(
-            status_code=500, 
-            detail=f"Errore durante la ricerca ibrida: {str(e)}"
-        )
-    
+
+@semantic_query_router.get("/knnMultiMatch")
+async def knn_multiMatch_endpoint(query: str, semantic: Annotated[SemanticSearch, FromDishka()])->List[Dict[str, Any]]:
+    return await semantic.knn_MultiMatch_search(query)

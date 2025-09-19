@@ -2,8 +2,8 @@ import logging
 from services.embedding.embedding_service import EmbeddingService
 from services.elasticSearch.connection.es_connection import ElasticSearchConnection
 from typing import Dict, List, Any
-import asyncio 
 from settings import settings
+from utils.error_handlers import safe_es_call
 
 logger = logging.getLogger(__name__)
 
@@ -13,6 +13,10 @@ class SemanticSearch():
         self.embedder= embedder
         self.es_conn =es_conn
 
+
+
+
+
     async def semantic_search(
         self, 
         query: str, 
@@ -20,7 +24,7 @@ class SemanticSearch():
         min_score: float = 0.7,
         timeout: float = 30.0
     ) -> List[Dict[str, Any]]:
-        """Versione con timeout e retry logic"""
+        
         
         async def _perform_search():
             query_embedding = await self.embedder._get_query_embedding(query)
@@ -48,28 +52,23 @@ class SemanticSearch():
                 body=search_body
             )
             
-            return [
-                {
+            results = []
+            for hit in response['hits']['hits']:
+                result = {
                     'id': hit['_id'],
                     'score': hit['_score'],
                     'source': hit['_source'],
-                    'similarity': hit['_score'] - 1.0
+                    'search_type': 'semantic_search'
                 }
-                for hit in response['hits']['hits']
-            ]
-        
-        try:
-            # Esegui con timeout
-            results = await asyncio.wait_for(_perform_search(), timeout=timeout)
-            logger.info(f"Ricerca completata: {len(results)} risultati per '{query}'")
+                results.append(result)
+                
             return results
-            
-        except asyncio.TimeoutError:
-            logger.error(f"Timeout ({timeout}s) durante la ricerca semantica per '{query}'")
-            raise Exception(f"Ricerca timeout dopo {timeout} secondi")
-        except Exception as e:
-            logger.error(f"Errore ricerca semantica: {str(e)}")
-            raise
+        
+        return await safe_es_call(_perform_search(), "search", timeout=timeout)
+
+
+
+
 
 
     async def hybrid_search_native(
@@ -131,18 +130,72 @@ class SemanticSearch():
                 results.append(result)
                 
             return results
+        
 
-        try:
-            results = await asyncio.wait_for(_perform_search(), timeout= timeout)
-            logger.info(f"Ricerca completata: {len(results)} risultati per '{query}'")
+        return await safe_es_call(_perform_search(), "search", timeout=timeout)
+        
+
+
+
+
+
+
+    async def knn_MultiMatch_search (self,
+                         query=str,
+                         timeout: float = 30.0,
+                         num_results: int = 5,
+                         num_candidate: int = 6
+                         )->List[Dict[str, Any]]: 
+        
+        """
+            integrata la funzinalita di ricerca tramite knn HSNW, un algoritmo che permette di fare la ricerca aproximate Knn ma introduce
+            funzionalita di early stop per dare risultati velocemente e mantenendo comunque una buona precisione
+        """
+
+        async def _perform_search():
+            query_embedding= await self.embedder._get_query_embedding(query)
+
+            search_body={
+                "knn": {
+                    "field": "semantic_embedding",
+                    "query_vector": query_embedding,
+                    "k": num_results,
+                    "num_candidates": num_candidate
+                },
+                "query": {
+                    "multi_match": {
+                        "query": query,
+                        "fields": ["title^2", "description", "keywords"]
+                    }
+                },
+                "_source": {
+                    "excludes": ["semantic_embedding"]
+                }
+            }
+
+            response = await self.es_conn.client.search(
+                index= settings.INDEX_NAME,
+                body=search_body
+            )
+
+            results=[]
+            for hit in response['hits']['hits']:
+                result = {
+                    'id': hit['_id'],
+                    'score': hit['_score'],
+                    'source': hit['_source'],
+                    'search_type': 'knn + multi_match'
+                }
+                results.append(result)
+                
             return results
+        
+        return await safe_es_call(_perform_search(), "search", timeout=timeout)
 
-        except asyncio.TimeoutError:
-            logger.error(f"Timeout ({timeout}s) durante la ricerca semantica per '{query}'")
-            raise Exception(f"Ricerca timeout dopo {timeout} secondi")
-        except Exception as e:
-            logger.error(f"Errore ricerca hybrid search: {str(e)}")
-            raise
+
+
+            
+            
 
 
     

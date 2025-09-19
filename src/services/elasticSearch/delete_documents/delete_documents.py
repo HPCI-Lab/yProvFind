@@ -3,6 +3,7 @@ from ..connection.es_connection import ElasticSearchConnection
 from settings import settings
 from elasticsearch import NotFoundError
 import elasticsearch.exceptions as ElasticsearchException
+from utils.error_handlers import safe_es_call
 
 logger = logging.getLogger(__name__)
 
@@ -15,52 +16,34 @@ class DeleteDocuments:
 
     async def delete_all_docuemnts_in_index(self, index_name: str):
         logger.debug(f"all the documents in index : {index_name} wil be eliminated but not the index")
-        try:
-            resp = await self.client.delete_by_query(
+
+        async def _delete():
+            response = await self.client.delete_by_query(
                 index=index_name,
                 body= {"query": {"match_all": {}}}
             )
             logger.info(
                 f"Delete by query completed on index '{index_name}': "
-                f"total={resp.get('total')}, "
-                f"deleted={resp.get('deleted')}, "
-                f"failures={resp.get('failures')}"
+                f"total={response.get('total')}, "
+                f"deleted={response.get('deleted')}, "
+                f"failures={response.get('failures')}"
             )
             return {
                 "status": "success",
                 "index": index_name,
-                "total": resp.get("total"),
-                "deleted": resp.get("deleted"),
-                "failures": resp.get("failures"),
+                "total": response.get("total"),
+                "deleted": response.get("deleted"),
+                "failures": response.get("failures"),
             }
-        except NotFoundError:
-            logger.warning(f"Index '{index_name}' not found")
-            return {
-                "status": "error",
-                "message": "Index not found",
-                "index": index_name
-            }
-        except ElasticsearchException as e:
-            logger.error(f"Elasticsearch error during deletion in index '{index_name}': {e}")
-            return {
-                "status": "error", 
-                "message": f"Elasticsearch error: {str(e)}",
-                "index": index_name
-            }
-        except Exception as e:
-            logger.error(f"Unexpected error during deletion in index '{index_name}': {e}")
-            return {
-                "status": "error",
-                "message": f"Unexpected error: {str(e)}",
-                "index": index_name
-            }
+        
+        return await safe_es_call(_delete(), "delete")
         
 
 
         
     async def delete_index(self, index_name:str):
 
-        try:
+        async def _delete():
             results = await self.client.indices.delete(index=index_name)
             logger.debug(f"eliminated index: {index_name}")
             return {
@@ -68,20 +51,8 @@ class DeleteDocuments:
                 "index" : index_name,
                 
             }
-        
-        except NotFoundError:
-            logger.error("index not found")
-            return {
-                "status": "error",
-                "index": index_name,
-                "message": "index not found"
-                
-            }
 
-        except Exception as e:
-            logger.error("index not eliminated")
-            return {
-                "status": "error",
-                "index": index_name,
-                "message": "internal error"
-            }
+        return await safe_es_call(_delete(), "delete")
+
+
+        

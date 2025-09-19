@@ -1,6 +1,7 @@
 import logging
 from ..connection.es_connection import ElasticSearchConnection
 from settings import settings
+from utils.error_handlers import safe_es_call
 
 logger = logging.getLogger(__name__)
 
@@ -8,9 +9,9 @@ class Multi_match_search:
     def __init__(self, es_conn: ElasticSearchConnection):
         self.client=es_conn.client
 
-    async def search(self, query: str):
-        try:
-            body = {
+    async def search(self, query: str, timeout: float=30):
+        async def _perform_search():
+            search_body = {
                 "query": {
                     "multi_match": {
                         "query": query,
@@ -19,10 +20,22 @@ class Multi_match_search:
                         },
                         
             }
-            resp = await self.client.search(index=settings.INDEX_NAME, body=body, size=10)
-            return resp["hits"]["hits"]
 
-        except Exception as e:
-            logger.error(f"error occour during the multi_match search: {e}")
-            raise
+            response = await self.es_conn.client.search(
+                index=settings.INDEX_NAME,
+                body=search_body
+            )
+            results = []
+            for hit in response['hits']['hits']:
+                result = {
+                    'id': hit['_id'],
+                    'score': hit['_score'],
+                    'source': hit['_source'],
+                    'search_type': 'semantic_search'
+                }
+                results.append(result)
+                
+            return results
+        
+        return await safe_es_call(_perform_search(), operation_type="search", timeout=timeout)
         

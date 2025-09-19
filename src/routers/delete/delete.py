@@ -14,38 +14,16 @@ delete_router = APIRouter(route_class=DishkaRoute,
                          prefix="/delete",
                          tags=["delete"])
 
+
+
 @delete_router.delete("/allDocInIndex")
 async def delete_all_doc_index(index_name: str, delete_service: Annotated[DeleteDocuments, FromDishka()] ):
-        try:
-            result = await delete_service.delete_all_docuemnts_in_index(index_name)
-            if result["status"] == "error":
-                if "not found" in result["message"].lower():
-                    raise HTTPException(status_code=404, detail=result["message"])
-                else:  
-                    raise HTTPException(status_code=500, detail=result["message"])
-                    
-                
-            
-            return result
-        except Exception as e:
-            logger.error(f"Endpoint error: {e}")
-            raise HTTPException(status_code=500, detail="Internal server error")
+    return await delete_service.delete_all_docuemnts_in_index(index_name)
+
+
         
 
 @delete_router.delete("/index")
 async def delete_index(index_name: str, delete_service: Annotated[DeleteDocuments, FromDishka()]):
-    try: 
-        response = await delete_service.delete_index(index_name) 
-        if response["status"]=="error":
-                if "not found" in response["message"].lower():
-                    raise HTTPException(status_code=404, detail=response["message"])
-                else:  
-                    raise HTTPException(status_code=500, detail=response["message"])
-                    
-                
-        return response
-
-    except Exception as e: 
-         logger.error(f"endpoint delete index error: {e}")
-         raise HTTPException(status_code=500, detail="Internal server error")
+    return await delete_service.delete_index(index_name)
 

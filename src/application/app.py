@@ -28,7 +28,7 @@ def get_app():
                 await request_container.get(ElasticSearchConnection)
                 indexer= await request_container.get(Indexer)
                 await indexer.bulk_indexer_embeddings()
-                await indexer.check_current_mapping()
+                #await indexer.check_current_mapping()
             except Exception as e:
                 logger.exception(f"errore nello starter {e}")
         
@@ -36,7 +36,7 @@ def get_app():
 
 
 
-    @app.on_event("startup") #forziamo la connessione ad elastichsearch all'avvio
+    @app.on_event("startup") 
     async def startup_event():
         asyncio.create_task(_starter())
         logger.debug("initialized starter tasks in backgroud")

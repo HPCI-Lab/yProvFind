@@ -5,7 +5,7 @@ import logging
 
 app = get_app()
 
-setup_logging(level=logging.DEBUG)
+setup_logging(level=logging.INFO)
 
 if __name__ == "__main__":
     uvicorn.run(
