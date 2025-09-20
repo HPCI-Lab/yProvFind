@@ -7,6 +7,13 @@ from elasticsearch import RequestError, TransportError, NotFoundError, Connectio
 logger = logging.getLogger(__name__)
 
 async def safe_es_call(coro, operation_type: str = "search", timeout: int = 30):
+    """
+    Esegue una coroutine Elasticsearch e gestisce gli eventuali errori
+
+    operation_type: "search" | "delete" | "update" | "admin"
+    timeout: timeout in secondi (solo per search o operazioni lunghe)
+    
+    """
     try:
         if operation_type in ["search", "update"]:
             return await asyncio.wait_for(coro, timeout=timeout)

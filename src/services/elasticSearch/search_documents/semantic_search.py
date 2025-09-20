@@ -22,7 +22,7 @@ class SemanticSearch():
         query: str, 
         size: int = 10, 
         min_score: float = 0.7,
-        timeout: float = 30.0
+        timeout: float = 10.0
     ) -> List[Dict[str, Any]]:
         
         
@@ -77,7 +77,7 @@ class SemanticSearch():
         size: int = 10,
         text_boost: float = 1.0,
         semantic_boost: float = 1.0,
-        timeout: float= 30
+        timeout: float= 10
     ) -> List[Dict[str, Any]]:
         """
         Ricerca ibrida usando le funzionalità native di Elasticsearch 8.0+
@@ -142,7 +142,7 @@ class SemanticSearch():
 
     async def knn_MultiMatch_search (self,
                          query=str,
-                         timeout: float = 30.0,
+                         timeout: float = 10.0,
                          num_results: int = 5,
                          num_candidate: int = 6
                          )->List[Dict[str, Any]]: 

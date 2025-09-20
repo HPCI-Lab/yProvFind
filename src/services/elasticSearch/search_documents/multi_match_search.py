@@ -3,13 +3,19 @@ from ..connection.es_connection import ElasticSearchConnection
 from settings import settings
 from utils.error_handlers import safe_es_call
 
+
+
 logger = logging.getLogger(__name__)
+
+
+
+
 
 class Multi_match_search:
     def __init__(self, es_conn: ElasticSearchConnection):
-        self.client=es_conn.client
+        self.es_conn=es_conn
 
-    async def search(self, query: str, timeout: float=30):
+    async def search(self, query: str, timeout: float=10):
         async def _perform_search():
             search_body = {
                 "query": {
@@ -18,6 +24,9 @@ class Multi_match_search:
                         "fields": ["title^3", "description", "keywords"]  # boost su title
                                     }
                         },
+                "_source": {
+                    "excludes": ["semantic_embedding"]
+                }
                         
             }
 

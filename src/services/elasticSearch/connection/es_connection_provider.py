@@ -17,9 +17,6 @@ class ElasticSearchService(Provider): #estensione della factory class Provider d
         try:
             await conn.connect()
             yield conn
-        except Exception as e:
-            logger.error(f"Failed to connect to ElasticSearch: {e}")
-            raise
         finally:
             await conn.close()
             logger.info("ElasticSearch connection closed")

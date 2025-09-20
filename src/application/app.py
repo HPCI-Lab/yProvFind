@@ -11,7 +11,10 @@ import asyncio
 logger = logging.getLogger(__name__)
 
 def get_app():
-    app=FastAPI()
+    app=FastAPI(title="yProvSearch",
+                description="Servizio di ricerca provenance all'interno di yProvStore",
+                version="1.0.0"
+                )
     app.include_router(root_routes)
 
 
