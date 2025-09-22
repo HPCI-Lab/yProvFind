@@ -8,10 +8,6 @@ import aiofiles
 import os
 FOLDER_PATH = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(__file__))), "jsonDoc")
 
-
-
-
-
 logger =logging.getLogger(__name__)
 
 class DocumentFetcher:

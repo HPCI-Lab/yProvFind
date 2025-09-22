@@ -1,5 +1,5 @@
 import logging
-from services.embedding.embedding_service import EmbeddingService
+from services.embedding.embedder import EmbeddingService
 from services.elasticSearch.connection.es_connection import ElasticSearchConnection
 from typing import Dict, List, Any
 from settings import settings

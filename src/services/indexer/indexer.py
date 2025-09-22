@@ -1,9 +1,9 @@
 
 import logging
 from services.elasticSearch.connection.es_connection import ElasticSearchConnection
-from .fetcher import DocumentFetcher
+from ..fetcher.fetcher import DocumentFetcher
 from elasticsearch.helpers import async_bulk
-from services.embedding.embedding_service import EmbeddingService
+from services.embedding.embedder import EmbeddingService
 from settings import settings
 from typing import List, Dict
 

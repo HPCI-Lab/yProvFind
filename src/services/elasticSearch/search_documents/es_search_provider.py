@@ -1,6 +1,6 @@
 from settings import settings
 from ..connection.es_connection import ElasticSearchConnection
-from services.embedding.embedding_service import EmbeddingService
+from services.embedding.embedder import EmbeddingService
 from .multi_match_search import Multi_match_search
 from .semantic_search import SemanticSearch
 from dishka import Provider, provide, Scope

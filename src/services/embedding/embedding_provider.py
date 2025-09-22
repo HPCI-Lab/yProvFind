@@ -1,5 +1,5 @@
 from dishka import Provider, provide, Scope
-from .embedding_service import EmbeddingService
+from .embedder import EmbeddingService
 
 
 class EmbeddingProvider(Provider):

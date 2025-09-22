@@ -30,7 +30,7 @@ class MultiMatchResponse(BaseModel):
                     summary="Ricerca full-text semplice",
                     description="Ricerca semplice basata su algoritmo BM25 con tokenizzazione e indice invertito",
                     response_description="Lista di documenti trovati ordinati per score",
-                    response_model=MultiMatchResponse
+                    response_model=List[MultiMatchResponse]
                 )
 async def search(query: str, multi_match_search: Annotated[Multi_match_search, FromDishka()])->List[MultiMatchResponse]:
     return await multi_match_search.search(query)

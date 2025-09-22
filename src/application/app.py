@@ -4,7 +4,7 @@ from services import providers
 from dishka import make_async_container
 from dishka.integrations.fastapi import setup_dishka
 from services.elasticSearch.connection.es_connection import ElasticSearchConnection
-from services.fetch_and_index.indexer import Indexer
+from services.indexer.indexer import Indexer
 import logging
 import asyncio
 

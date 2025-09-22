@@ -28,9 +28,9 @@ class DeleteAllDocsResponse(BaseModel):
 @delete_router.delete("/allDocInIndex",
                       summary="eliminazione tutti file di un indice",
                       description="L'endpoint offre un metodo per eliminare tutti i file indicizzati nell'indice designato senza eliminare l'indice stesso. Permette di mantenere quindi la mappatura dell'indice esistete",
-                      response_model= List[DeleteAllDocsResponse]
+                      response_model= DeleteAllDocsResponse
                       )
-async def delete_all_doc_index(index_name: str, delete_service: Annotated[DeleteDocuments, FromDishka()] )-> List[DeleteAllDocsResponse]:
+async def delete_all_doc_index(index_name: str, delete_service: Annotated[DeleteDocuments, FromDishka()] )-> DeleteAllDocsResponse:
     return await delete_service.delete_all_docuemnts_in_index(index_name)
 
 
@@ -42,8 +42,8 @@ class DeleteIndex(BaseModel):
 @delete_router.delete("/index",
                       summary="Eliminazione totale di un indice",
                       description="permette l'eliminazione di un indice in modo permanente da elasti search, compresa mappatura e file al suo interno",
-                      response_model=List[DeleteIndex]
+                      response_model=DeleteIndex
                       )
-async def delete_index(index_name: str, delete_service: Annotated[DeleteDocuments, FromDishka()])-> List[DeleteIndex]:
+async def delete_index(index_name: str, delete_service: Annotated[DeleteDocuments, FromDishka()])-> DeleteIndex:
     return await delete_service.delete_index(index_name)
 
