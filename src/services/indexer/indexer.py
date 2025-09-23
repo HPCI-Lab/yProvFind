@@ -10,7 +10,7 @@ from typing import List, Dict
 logger =logging.getLogger(__name__)
 
 
-class Indexer:
+class IndexService():
     def __init__(self, es_conn: ElasticSearchConnection, fetcher: DocumentFetcher, embedder: EmbeddingService):
         self.es_conn=es_conn
         self.fetcher=fetcher #il fetcher restituisce un generatore (iteratore)

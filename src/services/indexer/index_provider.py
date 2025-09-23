@@ -1,7 +1,7 @@
 from dishka import Provider, provide, Scope
 import logging
 from ..fetcher.fetcher import DocumentFetcher
-from .indexer import Indexer
+from .indexer import IndexService
 from services.elasticSearch.connection.es_connection import ElasticSearchConnection
 from services.embedding.embedder import EmbeddingService
 
@@ -17,8 +17,8 @@ class IndexerProvider(Provider):
         es_conn: "ElasticSearchConnection",
         fetcher: "DocumentFetcher",
         embedder: "EmbeddingService"
-    ) -> Indexer:
-        return Indexer(es_conn, fetcher, embedder)
+    ) -> IndexService:
+        return IndexService(es_conn, fetcher, embedder)
 
 
 

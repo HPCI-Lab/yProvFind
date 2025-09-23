@@ -4,7 +4,8 @@ from services import providers
 from dishka import make_async_container
 from dishka.integrations.fastapi import setup_dishka
 from services.elasticSearch.connection.es_connection import ElasticSearchConnection
-from services.indexer.indexer import Indexer
+from services.indexer.indexer import IndexService
+from services.orchestration.SFEI_controller import SFEIController
 import logging
 import asyncio
 
@@ -29,9 +30,14 @@ def get_app():
         async with container() as request_container:
             try:
                 await request_container.get(ElasticSearchConnection)
-                indexer= await request_container.get(Indexer)
+                """"
+                indexer= await request_container.get(IndexService)
                 await indexer.bulk_indexer_embeddings()
                 #await indexer.check_current_mapping()
+                """
+                SFEI_controller= await request_container.get(SFEIController)
+                await SFEI_controller.SFEI_init()
+
             except Exception as e:
                 logger.exception(f"errore nello starter {e}")
         
@@ -39,11 +45,22 @@ def get_app():
 
 
 
-    @app.on_event("startup") 
+    @app.on_event("startup")
     async def startup_event():
-        asyncio.create_task(_starter())
-        logger.debug("initialized starter tasks in backgroud")
-       
+        # Crea la task ma NON aspettarla
+        task = asyncio.create_task(_starter())
+        
+        # Opzionale: salva il task per poterlo cancellare dopo
+        app.state.background_task = task
+        
+        logger.info("✅ FastAPI avviato, background task in corso...")
+        # startup_event() finisce subito → FastAPI diventa ready
+
+    @app.on_event("shutdown") 
+    async def shutdown_event():
+        # Cancella gracefully il background task
+        if hasattr(app.state, 'background_task'):
+            app.state.background_task.cancel()
             
 
     return app

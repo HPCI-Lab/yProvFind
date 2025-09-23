@@ -3,7 +3,7 @@ from fastapi import APIRouter, HTTPException
 from dishka.integrations.fastapi import DishkaRoute, FromDishka
 from typing import Annotated
 from services.elasticSearch.connection.es_connection import ElasticSearchConnection
-from services.indexer.indexer import Indexer
+from services.indexer.indexer import IndexService
 
 
 logger = logging.getLogger(__name__)
@@ -15,7 +15,7 @@ fetch_router= APIRouter(route_class=DishkaRoute,
 
 
 @fetch_router.get("/all")
-async def fetch_all( fetcher: Annotated[Indexer, FromDishka()] ):
+async def fetch_all( fetcher: Annotated[IndexService, FromDishka()] ):
     try:
         logger.info("fetch di tutti i documenti")
         result = await fetcher.bulk_indexer_embeddings()

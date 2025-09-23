@@ -4,7 +4,8 @@ from .elasticSearch.search_documents.es_search_provider import Multi_match_searc
 from .elasticSearch.delete_documents.delete_provider import delete_provider
 from .embedding.embedding_provider import EmbeddingProvider
 from .fetcher.fetcher_provider import DocumentFetcherProvider
-
+from .scraper.scraper_provider import ScraperProvider
+from .orchestration.SFEI_provider import SFEIProvider
 
 __all__ = ("providers",)
 
@@ -14,5 +15,7 @@ providers =[ElasticSearchService,
             Multi_match_search_provider,
             delete_provider,
             EmbeddingProvider,
-            Semantic_search_provider
+            Semantic_search_provider,
+            ScraperProvider,
+            SFEIProvider
             ]
