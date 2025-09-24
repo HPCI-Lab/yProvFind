@@ -4,6 +4,7 @@ from dishka.integrations.fastapi import DishkaRoute, FromDishka
 from typing import Annotated
 from services.elasticSearch.connection.es_connection import ElasticSearchConnection
 from services.indexer.indexer import IndexService
+from services.orchestration.SFEI_controller import SFEIController
 
 
 logger = logging.getLogger(__name__)
@@ -15,10 +16,10 @@ fetch_router= APIRouter(route_class=DishkaRoute,
 
 
 @fetch_router.get("/all")
-async def fetch_all( fetcher: Annotated[IndexService, FromDishka()] ):
+async def fetch_all( SFEI_controller: Annotated[SFEIController, FromDishka()] ):
     try:
         logger.info("fetch di tutti i documenti")
-        result = await fetcher.bulk_indexer_embeddings()
+        result = await SFEI_controller.SFEI_init()
         logger.debug("fetch eseguito")
         return {
             "status": "completed",

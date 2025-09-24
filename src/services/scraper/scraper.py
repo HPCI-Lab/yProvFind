@@ -28,11 +28,11 @@ class ScraperService():
             #logger.debug(f"TIPO active_list: {type(self.active_list)} - VALORE: {self.active_list}")
             if result is True:  # Servizio attivo
                 self.active_list.append(address)
-                logger.info(f"{address} - ATTIVO")
+                logger.notice(f"Scraper: Server address -> {address} -> ACTIVE")
             elif isinstance(result, Exception):
-                logger.warning(f"{address} - ERRORE: {result}")
+                logger.warning(f"Scraper: Server address -> {address} -> ERROR: {result}")
             else:
-                logger.warning(f"{address} - NON RISPONDE")
+                logger.warning(f"Scraper: Server address -> {address} -> NOT RESPONDING")
         
 
 

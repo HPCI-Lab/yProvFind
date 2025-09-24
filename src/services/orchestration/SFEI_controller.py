@@ -4,7 +4,7 @@ from services.embedding.embedder import EmbeddingService
 from services.indexer.indexer import IndexService
 from services.scraper.scraper import ScraperService
 from services.fetcher.fetcher import DocumentFetcher
-
+from utils.error_handlers import safe_es_call
 from dataclasses import dataclass
 from typing import List, Dict
 
@@ -37,6 +37,8 @@ class SFEIController ():
 
     
     async def SFEI_init(self):
+        total_success=0
+        total_errors=[]
 
         try: 
             #recupero la lista di istanze yprov dallo scraper
@@ -49,18 +51,23 @@ class SFEIController ():
                 return self.stats
             
 
-            
-            
             for istance in yProvIstanceList:
                 async for page in self.fetcher.fetch_document_stream(istance):
-                    logger.debug("metadati ricevuti")
-                
+                    enriched_batch = await self.embedder.add_embeddings_to_batch(page)
+                    success, errors = await self.indexer._index_enriched_batch(enriched_batch)
+                    total_success += success
+                    total_errors.extend(errors)
 
-                
+            return {
+            "success_count": total_success,
+            "error_count": len(total_errors),
+            "has_errors": len(total_errors) > 0
+            }
 
+                    
 
         except Exception as e: 
-            logger.error(f"errore {e}", exc_info=True)
+            logger.error(f"SFEI erorr: {e}", exc_info=True)
 
 
 

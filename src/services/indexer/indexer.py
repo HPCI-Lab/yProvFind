@@ -71,15 +71,13 @@ class IndexService():
 
 
 
-    async def _process_and_index_batch(self, batch: List[Dict]):
+    async def _index_enriched_batch(self, enriched_batch: List[Dict]):
         try: 
-            enriched_batch = await self.embedder.add_embeddings_to_batch(batch)
-
             success, errors = await async_bulk(self.es_conn.client, enriched_batch)
             return success, errors
         except Exception as e:
             logger.error(f"Errore processing batch: {e}")
-            return 0, [{"error": str(e)} for _ in batch]                     
+            return 0, [{"error": str(e)} for _ in enriched_batch]                     
         
 
 

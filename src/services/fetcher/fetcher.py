@@ -11,11 +11,11 @@ import os
 FOLDER_PATH = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(__file__))), "jsonDoc")
 
 logger =logging.getLogger(__name__)
-"""""
-logging.getLogger("asyncio").setLevel(logging.WARNING)
+
+logging.getLogger("asyncio").setLevel(logging.INFO)
 logging.getLogger("httpx").setLevel(logging.WARNING)
-logging.getLogger("httpcore").setLevel(logging.WARNING)
-"""
+logging.getLogger("httpcore").setLevel(logging.INFO)
+
 
 class DocumentFetcher:
     def __init__(self):
@@ -79,14 +79,15 @@ class DocumentFetcher:
 
     async def complete_document(self, batch: List[Dict], base_url: str):
         tasks = []
-        logger.debug(f"Fetching metadata for:{base_url}")
+        
+        logger.info(f"Fetching metadata for: {base_url}")
         for doc in batch:
             pid = doc.get("pid")
             #logger.debug(f"Fetching metadata for:{base_url}___{pid}")
             tasks.append(self._fetch_metadata(base_url, pid))
 
         metadatas = await asyncio.gather(*tasks)
-        logger.debug(f"metadati elaborati :{len(metadatas)}")
+        logger.notice(f"Metadata found :{len(metadatas)} for {base_url}")
         
 
         results = []

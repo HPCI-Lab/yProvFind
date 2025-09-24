@@ -31,12 +31,14 @@ def get_app():
             try:
                 await request_container.get(ElasticSearchConnection)
                 """"
-                indexer= await request_container.get(IndexService)
+                
                 await indexer.bulk_indexer_embeddings()
-                #await indexer.check_current_mapping()
+                #
                 """
                 SFEI_controller= await request_container.get(SFEIController)
                 await SFEI_controller.SFEI_init()
+                indexer= await request_container.get(IndexService)
+                await indexer.check_current_mapping()
 
             except Exception as e:
                 logger.exception(f"errore nello starter {e}")

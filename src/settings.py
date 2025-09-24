@@ -11,6 +11,9 @@ class Settings(BaseSettings):
     PAGE_SIZE: int = 100
     BATCH_SIZE: int = 100
 
+
+    USE_LOCAL_EMBEDDER:bool= True
+
     class Config:
         env_file =".env"
 

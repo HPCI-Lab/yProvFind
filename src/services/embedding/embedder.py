@@ -3,15 +3,21 @@ from sentence_transformers import SentenceTransformer
 from services.fetcher.fetcher import DocumentFetcher
 from typing import Dict, List
 import asyncio
+from settings import settings
 
 logger = logging.getLogger(__name__)
 
 
 class EmbeddingService:
     def __init__(self, model_name: str = "all-MiniLM-L6-v2"):
-        self.model= SentenceTransformer(model_name, local_files_only=True)
-        logger.debug(f"Used model: {self.model}")
-        logger.debug("The model is loaded from the local cache")
+        
+        self.model= SentenceTransformer(model_name, local_files_only=settings.USE_LOCAL_EMBEDDER)
+        if settings.USE_LOCAL_EMBEDDER:
+            logger.debug("The embedding model is loaded from the local cache")
+        else :
+            logger.warning("The embedding model is checking for updates on internet, to disable set USE_LOCAL_EMBEDDER to True")
+
+
 
     async def add_embeddings_to_batch(self, documents: List[Dict]) -> List[Dict]:
         
@@ -57,10 +63,10 @@ class EmbeddingService:
         Returns:
             Testo combinato pronto per l'embedding
         """
-        title = document.get('_source', {}).get('title', '').strip()
-        description = document.get('_source', {}).get('description', '').strip()
-        keywords = document.get('_source', {}).get('keywords', [])
-
+        title = (document.get('_source', {}).get('title') or '').strip()
+        description = (document.get('_source', {}).get('description') or '').strip()
+        keywords = document.get('_source', {}).get('keywords') or []
+        author = (document.get('_source', {}).get('author') or '').strip()
         # Se keywords è una lista, la trasformo in stringa
         keywords_text = ', '.join([kw.strip() for kw in keywords if isinstance(kw, str)])
 
@@ -74,6 +80,8 @@ class EmbeddingService:
             full_text.append(description)
         if keywords:
             full_text.append(f"Keywords:{keywords}")
+        if author:
+            full_text.append(f"Author: {author}")
         if full_text:
             return '.'.join(full_text)
         else:
