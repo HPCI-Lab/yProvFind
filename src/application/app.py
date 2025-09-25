@@ -33,12 +33,12 @@ def get_app():
                 """"
                 
                 await indexer.bulk_indexer_embeddings()
-                #
+                indexer= await request_container.get(IndexService)
+                await indexer.check_current_mapping()
                 """
                 SFEI_controller= await request_container.get(SFEIController)
                 await SFEI_controller.SFEI_init()
-                indexer= await request_container.get(IndexService)
-                await indexer.check_current_mapping()
+
 
             except Exception as e:
                 logger.exception(f"errore nello starter {e}")

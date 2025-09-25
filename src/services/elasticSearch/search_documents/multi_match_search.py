@@ -21,7 +21,7 @@ class Multi_match_search:
                 "query": {
                     "multi_match": {
                         "query": query,
-                        "fields": ["title^3", "description", "keywords"]  # boost su title
+                        "fields": ["title^3", "description", "keywords","pid","parent_document_pid", "author"]  # boost su title
                                     }
                         },
                 "_source": {

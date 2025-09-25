@@ -43,7 +43,7 @@ class EmbeddingService:
                 enriched_doc['_source']['semantic_embedding']=embedding.tolist()
                 enriched_documents.append(enriched_doc)
 
-            logger.debug(f"Embeddings calcolati con successo per {len(enriched_documents)} documenti")
+            logger.info(f"Embeddings calcolati con successo per {len(enriched_documents)} documenti")
             return enriched_documents
                
 

@@ -39,7 +39,8 @@ def setup_logging(level=logging.INFO):
 
     handler = logging.StreamHandler()
     handler.setLevel(level)
-    handler.setFormatter(ColorFormatter('%(levelname)s | %(message)s'))
+    handler.setFormatter(ColorFormatter('%(asctime)s | %(levelname)-8s | %(message)s', datefmt='%Y-%m-%d %H:%M:%S'))
+
 
     if not root_logger.hasHandlers():
         root_logger.addHandler(handler)

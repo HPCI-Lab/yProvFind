@@ -6,7 +6,7 @@ from .embedding.embedding_provider import EmbeddingProvider
 from .fetcher.fetcher_provider import DocumentFetcherProvider
 from .scraper.scraper_provider import ScraperProvider
 from .orchestration.SFEI_provider import SFEIProvider
-
+from .orchestration.last_check_timestamp import TimestamProvider
 __all__ = ("providers",)
 
 providers =[ElasticSearchService,
@@ -17,5 +17,6 @@ providers =[ElasticSearchService,
             EmbeddingProvider,
             Semantic_search_provider,
             ScraperProvider,
-            SFEIProvider
+            SFEIProvider,
+            TimestamProvider
             ]

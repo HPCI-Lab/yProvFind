@@ -4,6 +4,8 @@ from services.embedding.embedder import EmbeddingService
 from services.indexer.indexer import IndexService
 from services.scraper.scraper import ScraperService
 from services.fetcher.fetcher import DocumentFetcher
+from .last_check_timestamp import TimestampManager
+
 from utils.error_handlers import safe_es_call
 from dataclasses import dataclass
 from typing import List, Dict
@@ -26,12 +28,13 @@ class ProcessingStats:
 
 
 class SFEIController (): 
-    def __init__ (self, es_conn: ElasticSearchConnection, embedder : EmbeddingService, fetcher: DocumentFetcher, indexer: IndexService, scraper: ScraperService ):
+    def __init__ (self, es_conn: ElasticSearchConnection, embedder : EmbeddingService, fetcher: DocumentFetcher, indexer: IndexService, scraper: ScraperService, timestamp: TimestampManager):
         self.es_con =  es_conn
         self.embedder = embedder
         self.fetcher = fetcher
         self.indexer = indexer
         self.scraper = scraper
+        self.timestamp = timestamp
 
         self.stats = ProcessingStats()
 
@@ -41,6 +44,8 @@ class SFEIController ():
         total_errors=[]
 
         try: 
+
+
             #recupero la lista di istanze yprov dallo scraper
             yProvIstanceList= await self.scraper.getList()
             self.stats.total_yProv_Istances= len(yProvIstanceList)
@@ -50,13 +55,20 @@ class SFEIController ():
                 logger.warning("Nessun servizio trovato!")
                 return self.stats
             
+            
+            
 
             for istance in yProvIstanceList:
-                async for page in self.fetcher.fetch_document_stream(istance):
+                last_fetch = await self.timestamp.get_last_fetch(istance)
+                iterator = self.fetcher.fetch_document_stream(istance, last_fetch)
+                
+                async for page in iterator:
                     enriched_batch = await self.embedder.add_embeddings_to_batch(page)
                     success, errors = await self.indexer._index_enriched_batch(enriched_batch)
                     total_success += success
                     total_errors.extend(errors)
+                await self.timestamp.update_last_fetch(istance)
+            
 
             return {
             "success_count": total_success,
@@ -68,6 +80,9 @@ class SFEIController ():
 
         except Exception as e: 
             logger.error(f"SFEI erorr: {e}", exc_info=True)
+
+        
+
 
 
 

@@ -1,3 +1,4 @@
+from services.orchestration.last_check_timestamp import TimestampManager
 import logging
 import httpx
 from dishka import Provider, provide, Scope
@@ -21,44 +22,49 @@ class DocumentFetcher:
     def __init__(self):
         self.semaphore=asyncio.Semaphore(4)
         self.client= httpx.AsyncClient() #creo qua il client cosi la connessione è persistente
-
+        
 
     
 
 
-    async def fetch_document_stream(self, base_url: str, batch_size: int =  settings.BATCH_SIZE ):
+    async def fetch_document_stream(self, base_url: str,last_fetch: str, batch_size: int =  settings.BATCH_SIZE ):
         page=0
         page_size=settings.PAGE_SIZE
+         
 
         while True:
             # Carica solo UNA pagina alla volta
-            documents_page = await self._fetch_page(base_url, page, page_size)
+            documents_page = await self._fetch_page(base_url, page, page_size, last_fetch)
             
             if not documents_page:
+                logger.info(f"Nessun documento trovato per {base_url}, terminazione fetch.")
                 break
                 
             complete_doc_list= await self.complete_document(documents_page, base_url)
-
-            
             # con yield appena arriva la prima pagina gia si puo iniziare a processare i documenti, mentre se fosse stata implementata 
             # una lista che accumulava avremmo dovuto attendere il caricamento di tutte le pagine prima
             yield complete_doc_list
 
-                
             page += 1
             if len(documents_page) < page_size:
                 break
         
+    async def close(self):
+        await self.client.aclose()
 
-    async def _fetch_page(self, base_url: str, page: int = settings.PAGE, page_size: int= settings.PAGE_SIZE):
+    async def _fetch_page(self, base_url: str, page: int = settings.PAGE, page_size: int= settings.PAGE_SIZE, update_after: str = None ):
         url = f"{base_url}/documents"
         params = {"page": page, "page_size": page_size}
-        
+        if update_after:
+            params["updated_after"]= update_after
         # Usa httpx async
-        async with httpx.AsyncClient() as client:
-            response = await client.get(url, params=params)
-            response.raise_for_status()
+        try:
+            response = await self.client.get(url, params=params)
+            response.raise_for_status() #se la risposta non è 200 fa raise
             return response.json()
+        except Exception as e:
+            logger.error(f"load page error: {e}")
+            return{}  #se avviene un errore con una pagina si ritorna pagina vuota e non blocca il resto
         
     
     async def _fetch_metadata(self, base_url: str, pid: str):
@@ -80,34 +86,55 @@ class DocumentFetcher:
     async def complete_document(self, batch: List[Dict], base_url: str):
         tasks = []
         
-        logger.info(f"Fetching metadata for: {base_url}")
+        logger.debug(f"Fetching metadata for: {base_url}")
         for doc in batch:
             pid = doc.get("pid")
-            #logger.debug(f"Fetching metadata for:{base_url}___{pid}")
             tasks.append(self._fetch_metadata(base_url, pid))
-
-        metadatas = await asyncio.gather(*tasks)
-        logger.notice(f"Metadata found :{len(metadatas)} for {base_url}")
         
-
-        results = []
-        for doc, metadata in zip(batch, metadatas):
-            complete_doc = {
+        try:
+            # return_exceptions=True: non fallisce se alcuni metadata falliscono
+            metadatas = await asyncio.gather(*tasks, return_exceptions=True)
+            
+            successful_metadata = sum(1 for m in metadatas if not isinstance(m, Exception))
+            logger.info(f"Metadata retrieved: {successful_metadata}/{len(metadatas)} for {base_url}")
+            
+            results = []
+            for doc, metadata in zip(batch, metadatas):
+                # Se metadata è un'eccezione, usa valori vuoti
+                if isinstance(metadata, Exception):
+                    logger.warning(f"Metadata failed for {doc.get('pid')}: {metadata}")
+                    metadata = {}  # metadata vuoti
+                
+                complete_doc = {
+                    "_index": settings.INDEX_NAME,
+                    "_source": {
+                        "pid": doc["pid"],
+                        "version": doc["version"], 
+                        "owner_email": doc["owner_email"],
+                        "parent_document_pid": doc["parent_document_pid"],
+                        "title": metadata.get("title", ""),
+                        "description": metadata.get("description", ""),
+                        "keywords": metadata.get("keywords", ""),
+                        "author": metadata.get("author",""),
+                    },
+                }
+                results.append(complete_doc)
+            
+            return results
+            
+        except Exception as e:
+            logger.error(f"Critical error in complete_document for {base_url}: {e}")
+            # Restituisci documenti con metadata vuoti invece di fallire tutto
+            return [{
                 "_index": settings.INDEX_NAME,
                 "_source": {
                     "pid": doc["pid"],
                     "version": doc["version"],
-                    "owner_email": doc["owner_email"],
+                    "owner_email": doc["owner_email"], 
                     "parent_document_pid": doc["parent_document_pid"],
-                    "title": metadata["title"],
-                    "description": metadata["description"],
-                    "keywords": metadata["keywords"],
-                    "author": metadata["author"],
-                },
-            }
-            results.append(complete_doc)
-
-        return results
+                    "title": None, "description": None, "keywords": None, "author": None
+                }
+            } for doc in batch]
         
 
 

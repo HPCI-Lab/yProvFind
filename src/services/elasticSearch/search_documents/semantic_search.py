@@ -93,7 +93,7 @@ class SemanticSearch():
                         "query": {
                             "multi_match": {
                                 "query": query,
-                                "fields": ["title^2", "description", "keywords"]
+                                "fields": ["title^2", "description", "keywords", "author"]
                             }
                         },
                         "script": {
@@ -165,7 +165,7 @@ class SemanticSearch():
                 "query": {
                     "multi_match": {
                         "query": query,
-                        "fields": ["title^2", "description", "keywords"]
+                        "fields": ["title^2", "description", "keywords", "author"]
                     }
                 },
                 "_source": {

@@ -5,6 +5,7 @@ from services.indexer.indexer import IndexService
 from services.scraper.scraper import ScraperService
 from services.fetcher.fetcher import DocumentFetcher
 from services.orchestration.SFEI_controller import SFEIController
+from services.orchestration.last_check_timestamp import TimestampManager
 
 class SFEIProvider (Provider): 
     @provide(scope=Scope.REQUEST)
@@ -13,9 +14,10 @@ class SFEIProvider (Provider):
                             embedder: "EmbeddingService",
                             fetcher: "DocumentFetcher",
                             indexer: "IndexService",
-                            scraper: "ScraperService"
+                            scraper: "ScraperService",
+                            timestamp: "TimestampManager"
                             )->SFEIController:
-        return SFEIController(es_conn, embedder, fetcher, indexer, scraper)
+        return SFEIController(es_conn, embedder, fetcher, indexer, scraper, timestamp)
 
 
 
