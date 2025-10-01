@@ -15,7 +15,7 @@ fetch_router= APIRouter(route_class=DishkaRoute,
                         )
 
 
-@fetch_router.get("/all")
+@fetch_router.get("/dateFetch")
 async def fetch_all( SFEI_controller: Annotated[SFEIController, FromDishka()] ):
     try:
         logger.info("fetch di tutti i documenti")
@@ -29,7 +29,7 @@ async def fetch_all( SFEI_controller: Annotated[SFEIController, FromDishka()] ):
         }
 
     except Exception as e: 
-        logger.error(f"end point fetch non riuscito: {e}")
+        logger.error(f"fetch non riuscito: {e}")
         raise HTTPException(
             status_code=500, 
             detail="Errore durante il fetch dei documenti"

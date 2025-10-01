@@ -40,11 +40,10 @@ def get_app():
                 await SFEI_controller.SFEI_init()
 
 
+
             except Exception as e:
                 logger.exception(f"errore nello starter {e}")
         
-
-
 
 
     @app.on_event("startup")

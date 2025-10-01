@@ -1,6 +1,6 @@
 import logging
 from pydantic import BaseModel
-from typing import Any, Dict, List
+from typing import Any, Dict, List, Optional
 from fastapi import  APIRouter, Query, HTTPException
 from dishka.integrations.fastapi import FromDishka, DishkaRoute
 from services.elasticSearch.search_documents.multi_match_search import Multi_match_search
@@ -19,9 +19,9 @@ query_router = APIRouter(route_class=DishkaRoute,
 
 class MultiMatchResponse(BaseModel):
     id: str
-    score: float
+    score: Optional[float] = None
     source: Dict[str, Any]
-    search_type: str
+    other_versions: Optional[List[Dict[str, Any]]] = None
 
 
 #qua usiamo Annotated perche aggiungiamo al type hint "Multi_match_search" il metadata "FromDishka"

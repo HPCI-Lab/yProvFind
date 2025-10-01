@@ -112,6 +112,7 @@ class DocumentFetcher:
                         "version": doc["version"], 
                         "owner_email": doc["owner_email"],
                         "parent_document_pid": doc["parent_document_pid"],
+                        "lineage": "123456",
                         "title": metadata.get("title", ""),
                         "description": metadata.get("description", ""),
                         "keywords": metadata.get("keywords", ""),

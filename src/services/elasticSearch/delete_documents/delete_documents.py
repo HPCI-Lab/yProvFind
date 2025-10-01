@@ -48,8 +48,7 @@ class DeleteDocuments:
             logger.debug(f"eliminated index: {index_name}")
             return {
                 "status": "success",
-                "index" : index_name,
-                
+                "index" : index_name
             }
 
         return await safe_es_call(_delete(), "delete")

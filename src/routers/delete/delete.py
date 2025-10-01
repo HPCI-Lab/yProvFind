@@ -1,9 +1,10 @@
 import logging
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, Query
 from dishka.integrations.fastapi import FromDishka, DishkaRoute
 from services.elasticSearch.delete_documents.delete_documents import DeleteDocuments
 from typing import Annotated, List , Any, Optional
 from pydantic import BaseModel, Field
+
 
 
 logger=logging.getLogger(__name__)
@@ -30,7 +31,7 @@ class DeleteAllDocsResponse(BaseModel):
                       description="L'endpoint offre un metodo per eliminare tutti i file indicizzati nell'indice designato senza eliminare l'indice stesso. Permette di mantenere quindi la mappatura dell'indice esistete",
                       response_model= DeleteAllDocsResponse
                       )
-async def delete_all_doc_index(index_name: str, delete_service: Annotated[DeleteDocuments, FromDishka()] )-> DeleteAllDocsResponse:
+async def delete_all_doc_index(index_name: Annotated[str, Query(example="documents")], delete_service: Annotated[DeleteDocuments, FromDishka()] )-> DeleteAllDocsResponse:
     return await delete_service.delete_all_docuemnts_in_index(index_name)
 
 
@@ -44,6 +45,6 @@ class DeleteIndex(BaseModel):
                       description="permette l'eliminazione di un indice in modo permanente da elasti search, compresa mappatura e file al suo interno",
                       response_model=DeleteIndex
                       )
-async def delete_index(index_name: str, delete_service: Annotated[DeleteDocuments, FromDishka()])-> DeleteIndex:
+async def delete_index(index_name:  Annotated[str, Query(example="documents")], delete_service: Annotated[DeleteDocuments, FromDishka()])-> DeleteIndex:
     return await delete_service.delete_index(index_name)
 
