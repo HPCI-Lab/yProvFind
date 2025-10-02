@@ -71,7 +71,7 @@ class IndexService():
 
 
 
-    async def _index_enriched_batch(self, enriched_batch: List[Dict]):
+    async def index_enriched_batch(self, enriched_batch: List[Dict]):
         try: 
             success, errors = await async_bulk(self.es_conn.client, enriched_batch)
             return success, errors

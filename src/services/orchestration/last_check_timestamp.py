@@ -31,9 +31,7 @@ class TimestampManager:
     
     async def update_last_fetch(self, address: str):
         """Salva timestamp corrente in formato ISO 8601"""
-        rome = ZoneInfo("Europe/Rome")
-        timestamp = datetime.now(rome).isoformat()
-        
+        timestamp = datetime.now(timezone.utc).isoformat()
         try:
             # 1. CARICA dati esistenti
             existing_data = {}

@@ -2,6 +2,7 @@ import logging
 from ..connection.es_connection import ElasticSearchConnection
 from settings import settings
 from utils.error_handlers import safe_es_call
+from typing import List, Dict, Optional, Any
 
 
 
@@ -15,14 +16,57 @@ class Multi_match_search:
     def __init__(self, es_conn: ElasticSearchConnection):
         self.es_conn=es_conn
 
-    async def search(self, query: str, timeout: float = 10, include_all_versions: bool = True):
+    async def search(self, query: str, addFilters: Dict, include_all_versions: bool = False, timeout: float = 10):
+        must=[]
+        filters=[]
         async def _perform_search():
-            # Prima query: trova i documenti più rilevanti
-            body = {
-                "query": {
+            logger.debug(f"eseguo la ricerca su elastic search ancora non ce timeout avvio perform search")
+
+            if query:
+                must.append({
                     "multi_match": {
                         "query": query,
                         "fields": ["title", "description", "keywords", "author"]
+                    }
+                })
+
+            if addFilters: 
+                if addFilters.get("date_from"):   
+                    filters.append({
+                        "range": {
+                            "created_at": {   
+                                "gte": addFilters["date_from"]
+                            }
+                        }
+                    })
+
+                if addFilters.get("date_to"):
+                    filters.append({
+                        "range": {
+                            "created_at": {"lte": addFilters["date_to"]}
+                        }
+                    })
+
+                if addFilters.get("version"):
+                    filters.append({
+                        "term": {
+                            "version": addFilters["version"]
+                        }
+                    })
+
+                if addFilters.get("yProvIstance"):
+                    filters.append({
+                        "term": {
+                            "yProvIstance": addFilters["yProvIstance"]
+                        }
+                    })
+
+
+            body={
+                "query":{
+                    "bool": {
+                        "must": must,
+                        "filter": filters
                     }
                 },
                 "collapse": {
@@ -38,93 +82,119 @@ class Multi_match_search:
                 "size": 10
             }
             
+            logger.debug(f"eseguo la ricerca su elastic search ancora non ce timeout")
+
             response = await self.es_conn.client.search(
                 index=settings.INDEX_NAME,
                 body=body
             )
-            
-            results = []
+            logger.debug(f"arrivata la risposta da elastic search per la query")
             
             # Se dobbiamo includere tutte le versioni, raccogli i lineage trovati
-            if include_all_versions and response["hits"]["hits"]:
-                lineages = [hit["_source"].get("lineage") for hit in response["hits"]["hits"] if hit["_source"].get("lineage")]
-                
-                if lineages:
-                    # Seconda query: recupera TUTTE le versioni per i lineage trovati
-                    versions_body = {
-                        "query": {
-                            "terms": {
-                                "lineage": lineages
-                            }
-                        },
-                        "sort": [
-                            {"lineage": {"order": "asc"}},
-                            {"version": {"order": "desc"}}
-                        ],
-                        "_source": {
-                            "excludes": ["semantic_embedding"]
-                        },
-                        "size": 1000  # Assicurati di prendere tutte le versioni
-                    }
-                    
-                    versions_response = await self.es_conn.client.search(
-                        index=settings.INDEX_NAME,
-                        body=versions_body
-                    )
-                    
-                    # Organizza le versioni per lineage
-                    versions_by_lineage = {}
-                    for hit in versions_response["hits"]["hits"]:
-                        lineage = hit["_source"].get("lineage")
-                        if lineage:
-                            if lineage not in versions_by_lineage:
-                                versions_by_lineage[lineage] = []
-                            versions_by_lineage[lineage].append({
-                                "id": hit["_id"],
-                                "score": hit.get("_score"),
-                                "source": hit["_source"],
-                                "version": hit["_source"].get("version")
-                            })
-                    
-                    # Costruisci i risultati con tutte le versioni
-                    for hit in response["hits"]["hits"]:
-                        lineage = hit["_source"].get("lineage")
-                        
-                        result = {
-                            "id": hit["_id"],
-                            "score": hit["_score"],
-                            "source": hit["_source"],
-                            "search_type": "full_text",
+            
+               
+            return await self._add_versions(response, include_all_versions)
+        
+        return await safe_es_call(_perform_search(), operation_type="search", timeout=timeout)
+    
+
+
+
+    async def _add_versions(self, response: Dict[str, Any], include_all_versions: bool) -> List[Dict[str, Any]]:
+        results = []
+        
+        # Se non ci sono hit, ritorna lista vuota
+        if not response["hits"]["hits"]:
+            return results
+        
+        # Se dobbiamo includere tutte le versioni, raccogli i lineage trovati
+        if include_all_versions:
+            lineages = [hit["_source"].get("lineage") for hit in response["hits"]["hits"] if hit["_source"].get("lineage")]
+            logger.debug(f"Lineages found: {lineages}")
+            
+            if lineages:
+                # Seconda query: recupera TUTTE le versioni per i lineage trovati
+                versions_body = {
+                    "query": {
+                        "terms": {
+                            "lineage": lineages
                         }
-                        
-                        if lineage and lineage in versions_by_lineage:
-                            # Filtra escludendo il documento principale
-                            all_versions = versions_by_lineage[lineage]
-                            result["other_versions"] = [
-                                v for v in all_versions
-                                if v["id"] != hit["_id"]
-                            ]
-                            
-                            # Log per debugging
-                            logger.debug(f"Document {hit['_id']} (v{hit['_source'].get('version')}) has {len(result['other_versions'])} other versions")
-                            versions_list = [v.get('version') for v in result['other_versions']]
-                            logger.debug(f"Other versions: {versions_list}")
-                        else:
-                            result["other_versions"] = []
-                        
-                        results.append(result)
-            else:
-                # Se non includiamo tutte le versioni, ritorna solo i risultati principali
+                    },
+                    "sort": [
+                        {"lineage": {"order": "asc"}},
+                        {"version": {"order": "desc"}}
+                    ],
+                    "_source": {
+                        "excludes": ["semantic_embedding"]
+                    },
+                    "size": 1000  # Assicurati di prendere tutte le versioni
+                }
+                
+                versions_response = await self.es_conn.client.search(
+                    index=settings.INDEX_NAME,
+                    body=versions_body
+                )
+                
+                # Organizza le versioni per lineage
+                versions_by_lineage = {}
+                for hit in versions_response["hits"]["hits"]:
+                    lineage = hit["_source"].get("lineage")
+                    if lineage:
+                        if lineage not in versions_by_lineage:
+                            versions_by_lineage[lineage] = []
+                        versions_by_lineage[lineage].append({
+                            "id": hit["_id"],
+                            "score": hit.get("_score"),
+                            "source": hit["_source"],
+                            "version": hit["_source"].get("version")
+                        })
+                
+                # Costruisci i risultati con tutte le versioni
                 for hit in response["hits"]["hits"]:
+                    lineage = hit["_source"].get("lineage")
+                    
                     result = {
                         "id": hit["_id"],
                         "score": hit["_score"],
-                        "source": hit["_source"],
-                        "search_type": "full_text",
-                        "other_versions": None
+                        "source": hit["_source"]
                     }
+                    
+                    if lineage and lineage in versions_by_lineage:
+                        # Filtra escludendo il documento principale
+                        all_versions = versions_by_lineage[lineage]
+                        result["other_versions"] = [
+                            {
+                                "id": v["id"],
+                                "score": v["score"],
+                                "source": v["source"]
+                            }
+                            for v in all_versions
+                            if v["id"] != hit["_id"]
+                        ]
+                        
+                        # Log per debugging
+                        logger.debug(f"Document {hit['_id']} (v{hit['_source'].get('version')}) has {len(result['other_versions'])} other versions")
+                        logger.debug(result['other_versions'])
+                        versions_list = [v['source'].get('version') for v in result['other_versions']]
+                        logger.debug(f"Other versions: {versions_list}")
+                        
+                    else:
+                        result["other_versions"] = []
+                    
                     results.append(result)
-            
-            return results
+        else:
+            # Se non includiamo tutte le versioni, ritorna solo i risultati principali
+            for hit in response["hits"]["hits"]:
+                result = {
+                    "id": hit["_id"],
+                    "score": hit["_score"],
+                    "source": hit["_source"],
+                    "other_versions": None
+                }
+                results.append(result)
         
-        return await safe_es_call(_perform_search(), operation_type="search", timeout=timeout)
+        return results            
+            
+
+
+    

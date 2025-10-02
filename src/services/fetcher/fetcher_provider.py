@@ -3,6 +3,7 @@ import logging
 from .fetcher import DocumentFetcher
 from typing import AsyncIterator
 from services.orchestration.last_check_timestamp import TimestampManager
+from services.elasticSearch.connection.es_connection import ElasticSearchConnection
 
 
 logger =logging.getLogger(__name__)

@@ -24,7 +24,7 @@ DOCUMENT_MAPPING_EXAMPLE = {
                 }
             },
             "version": {
-                "type": "keyword"
+                "type": "integer"
             },
             "owner_email": {
                 "type": "keyword"
@@ -63,7 +63,14 @@ DOCUMENT_MAPPING_EXAMPLE = {
                     "m": 16,
                     "ef_construction": 100
                 }
+            },
+            "created_at": {
+                "type": "date"
+            },
+            "yProvIstance": {
+                "type": "keyword"
             }
+
         }
     }
 }

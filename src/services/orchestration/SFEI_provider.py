@@ -6,6 +6,7 @@ from services.scraper.scraper import ScraperService
 from services.fetcher.fetcher import DocumentFetcher
 from services.orchestration.SFEI_controller import SFEIController
 from services.orchestration.last_check_timestamp import TimestampManager
+from services.elasticSearch.update_documents.lineage_update_in_v1 import LineageUpdateV1
 
 class SFEIProvider (Provider): 
     @provide(scope=Scope.REQUEST)
@@ -15,9 +16,10 @@ class SFEIProvider (Provider):
                             fetcher: "DocumentFetcher",
                             indexer: "IndexService",
                             scraper: "ScraperService",
-                            timestamp: "TimestampManager"
+                            timestamp: "TimestampManager",
+                            v1_lineage_updater: "LineageUpdateV1"
                             )->SFEIController:
-        return SFEIController(es_conn, embedder, fetcher, indexer, scraper, timestamp)
+        return SFEIController(es_conn, embedder, fetcher, indexer, scraper, timestamp, v1_lineage_updater)
 
 
 

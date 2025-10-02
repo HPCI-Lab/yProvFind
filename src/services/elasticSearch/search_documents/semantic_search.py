@@ -256,7 +256,7 @@ class SemanticSearch():
                     "id": hit["_id"],
                     "score": hit["_score"],
                     "source": hit["_source"],
-                    "other_versions": None
+                    "other_versions": []
                 }
                 results.append(result)
         

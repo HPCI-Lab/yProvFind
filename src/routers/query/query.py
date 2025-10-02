@@ -1,5 +1,6 @@
 import logging
 from pydantic import BaseModel
+from datetime import date
 from typing import Any, Dict, List, Optional
 from fastapi import  APIRouter, Query, HTTPException
 from dishka.integrations.fastapi import FromDishka, DishkaRoute
@@ -32,5 +33,19 @@ class MultiMatchResponse(BaseModel):
                     response_description="Lista di documenti trovati ordinati per score",
                     response_model=List[MultiMatchResponse]
                 )
-async def search(query: str, multi_match_search: Annotated[Multi_match_search, FromDishka()])->List[MultiMatchResponse]:
-    return await multi_match_search.search(query)
+async def search(
+    query: str,
+    multi_match_search: Annotated[Multi_match_search, FromDishka()],
+    date_from: Optional[date] = None,
+    date_to: Optional[date] = None,
+    version: Optional[int] = None,
+    yProvIstance: Optional[str] = None,
+    other_versions: Optional[bool] = True
+) -> List[MultiMatchResponse]:
+    filters = {
+        "date_from": date_from,
+        "date_to": date_to,
+        "version": version,
+        "yProvIstance": yProvIstance,
+    }
+    return await multi_match_search.search(query, filters, other_versions)
