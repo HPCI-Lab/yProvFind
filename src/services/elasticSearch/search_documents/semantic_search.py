@@ -20,27 +20,35 @@ class SemanticSearch():
     async def semantic_search(
         self, 
         query: str, 
+        add_filters: Dict,
+        include_all_versions: bool = True,
         size: int = 10, 
         min_score: float = 0.7,
-        timeout: float = 10.0,
-        include_all_versions: bool = True
+        timeout: float = 10.0
     ) -> List[Dict[str, Any]]:
-        
         
         async def _perform_search():
             query_embedding = await self.embedder._get_query_embedding(query)
             
+            bool_query = {"must": {"match_all": {}}}
+
+            if add_filters:
+                bool_query["filter"] = await self._add_filters(add_filters)
+
             search_body = {
                 "size": size,
                 "min_score": min_score,
                 "query": {
                     "script_score": {
-                        "query": {"match_all": {}},
+                        "query": {"bool": bool_query},
                         "script": {
                             "source": "cosineSimilarity(params.query_vector, 'semantic_embedding') + 1.0",
                             "params": {"query_vector": query_embedding}
                         }
                     }
+                },
+                "collapse": {
+                    "field": "lineage"
                 },
                 "_source": {
                     "excludes": ["semantic_embedding"]
@@ -61,14 +69,21 @@ class SemanticSearch():
 
 
 
+
+
+
+
+
     async def hybrid_search_native(
         self,
         query: str,
+        addFilters: Dict,
+        include_all_versions: bool,
         size: int = 10,
         text_boost: float = 1.0,
         semantic_boost: float = 1.0,
-        timeout: float= 10,
-        include_all_versions: bool = True
+        timeout: float= 10
+        
     ) -> List[Dict[str, Any]]:
         """
         Ricerca ibrida usando le funzionalità native di Elasticsearch 8.0+
@@ -76,17 +91,24 @@ class SemanticSearch():
         """
         async def _perform_search():
             query_embedding = await self.embedder._get_query_embedding(query)
-                
+
+            bool_query = {
+                "must": {
+                    "multi_match": {
+                        "query": query,
+                        "fields": ["title^2", "description", "keywords", "author"]
+                    }
+                }
+            }
+            
+            if addFilters:
+                bool_query["filter"] = await self._add_filters(addFilters)
+            
             search_body = {
                 "size": size,
                 "query": {
                     "script_score": {
-                        "query": {
-                            "multi_match": {
-                                "query": query,
-                                "fields": ["title^2", "description", "keywords", "author"]
-                            }
-                        },
+                        "query": {"bool": bool_query},
                         "script": {
                             "source": (
                                 "cosineSimilarity(params.query_vector, 'semantic_embedding') * params.semantic_boost "
@@ -100,6 +122,9 @@ class SemanticSearch():
                         }
                     }
                 },
+                "collapse": {
+                    "field": "lineage"
+                },
                 "_source": {
                     "excludes": ["semantic_embedding"]
                 }
@@ -121,14 +146,17 @@ class SemanticSearch():
 
 
 
-    async def knn_MultiMatch_search (self,
-                         query=str,
-                         timeout: float = 10.0,
-                         num_results: int = 5,
-                         num_candidate: int = 6,
-                         include_all_versions: bool = True
-                         )->List[Dict[str, Any]]: 
-        
+    async def knn_MultiMatch_search (
+        self,
+        query: str,
+        addFilters: Dict,
+        include_all_versions: bool,
+        size: int = 10,
+        num_results: int = 5,
+        num_candidate: int = 10,
+        timeout: float = 10.0
+            )->List[Dict[str, Any]]: 
+
         """
             integrata la funzinalita di ricerca tramite knn HSNW, un algoritmo che permette di fare la ricerca aproximate Knn ma introduce
             funzionalita di early stop per dare risultati velocemente e mantenendo comunque una buona precisione
@@ -137,24 +165,39 @@ class SemanticSearch():
         async def _perform_search():
             query_embedding= await self.embedder._get_query_embedding(query)
 
-            search_body={
-                "knn": {
-                    "field": "semantic_embedding",
-                    "query_vector": query_embedding,
-                    "k": num_results,
-                    "num_candidates": num_candidate
-                },
-                "query": {
+            knn_query = {
+                "field": "semantic_embedding",
+                "query_vector": query_embedding,
+                "k": num_results,
+                "num_candidates": num_candidate
+            }
+
+            # Costruisci la bool query per il filtro testuale
+            bool_query = {
+                "must": {
                     "multi_match": {
                         "query": query,
                         "fields": ["title^2", "description", "keywords", "author"]
                     }
+                }
+            }
+
+            # Aggiungi filtri se presenti
+            if addFilters:
+                filters = await self._add_filters(addFilters)
+                bool_query["filter"] = filters
+                knn_query["filter"] = filters  # I filtri vanno anche in knn!
+
+            search_body = {
+                "knn": knn_query,
+                "query": {"bool": bool_query},
+                "collapse": {
+                    "field": "lineage"
                 },
-                
                 "_source": {
                     "excludes": ["semantic_embedding"]
                 }
-            }
+            }          
 
             response = await self.es_conn.client.search(
                 index= settings.INDEX_NAME,
@@ -164,7 +207,10 @@ class SemanticSearch():
             return await self._add_versions(response, include_all_versions)
         
         return await safe_es_call(_perform_search(), "search", timeout=timeout)
-    
+
+
+
+
 
 
     async def _add_versions(self, response: Dict[str, Any], include_all_versions: bool) -> List[Dict[str, Any]]:
@@ -241,7 +287,6 @@ class SemanticSearch():
                         
                         # Log per debugging
                         logger.debug(f"Document {hit['_id']} (v{hit['_source'].get('version')}) has {len(result['other_versions'])} other versions")
-                        logger.debug(result['other_versions'])
                         versions_list = [v['source'].get('version') for v in result['other_versions']]
                         logger.debug(f"Other versions: {versions_list}")
                         
@@ -263,5 +308,38 @@ class SemanticSearch():
         return results            
             
 
+    async def _add_filters(self, filters:Dict): 
+        _filters=[]
+        if filters:
+            if filters.get("date_from"):   
+                    _filters.append({
+                        "range": {
+                            "created_at": {   
+                                "gte": filters["date_from"]
+                            }
+                        }
+                    })
 
-    
+            if filters.get("date_to"):
+                _filters.append({
+                    "range": {
+                        "created_at": {"lte": filters["date_to"]}
+                    }
+                })
+
+            if filters.get("version"):
+                _filters.append({
+                    "term": {
+                        "version": filters["version"]
+                    }
+                })
+
+            if filters.get("yProvIstance"):
+                _filters.append({
+                    "term": {
+                        "yProvIstance": filters["yProvIstance"]
+                    }
+                })
+        return _filters
+
+

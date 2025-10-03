@@ -4,64 +4,83 @@ from services import providers
 from dishka import make_async_container
 from dishka.integrations.fastapi import setup_dishka
 from services.elasticSearch.connection.es_connection import ElasticSearchConnection
-from services.indexer.indexer import IndexService
 from services.orchestration.SFEI_controller import SFEIController
 import logging
 import asyncio
+from apscheduler.schedulers.asyncio import AsyncIOScheduler
+from contextlib import asynccontextmanager
+from settings import settings
+
+
 
 logger = logging.getLogger(__name__)
 
-def get_app():
-    app=FastAPI(title="yProvSearch",
-                description="Servizio di ricerca provenance all'interno di yProvStore",
-                version="1.0.0"
-                )
-    app.include_router(root_routes)
 
 
-    #carichiamo i servizi (provider) nel container di dishka, e lo colleghiamo a FastAPI
-    #nel momento che si caricano i servizi non vengono anche eseguiti, essi si attivano solo se chiamati e ignettati da dishka
-    services = [provider() for provider in providers]
-    container = make_async_container(*services)
-    setup_dishka(container=container, app=app)
+scheduler = AsyncIOScheduler()
 
-
+def create_lifespan(container):
+    async def _run_sfei_init():
+        
+        async with container() as request_container:
+            try:
+                SFEI_controller = await request_container.get(SFEIController)
+                await SFEI_controller.SFEI_init()
+                logger.info("SFEI_init completata con successo")
+            except Exception as e:
+                logger.exception(f"Errore in SFEI_init: {e}")
+    
     async def _starter():
+        """Esegue setup iniziale completo (solo all'avvio)"""
         async with container() as request_container:
             try:
                 await request_container.get(ElasticSearchConnection)
-                """"
-                
-                await indexer.bulk_indexer_embeddings()
-                indexer= await request_container.get(IndexService)
-                await indexer.check_current_mapping()
-                """
-                SFEI_controller= await request_container.get(SFEIController)
+                SFEI_controller = await request_container.get(SFEIController)
                 await SFEI_controller.SFEI_init()
-
-
-
+                logger.info("Starter completato con successo")
             except Exception as e:
-                logger.exception(f"errore nello starter {e}")
+                logger.exception(f"Errore nello starter: {e}")
+    
+    @asynccontextmanager
+    async def lifespan(app: FastAPI):
+        # Startup
+        logger.info("Avvio applicazione - esecuzione completa starter in background")
         
-
-
-    @app.on_event("startup")
-    async def startup_event():
-        # Crea la task ma NON aspettarla
-        task = asyncio.create_task(_starter())
+        # Esegui starter completo solo all'avvio (con ElasticSearch check)
+        asyncio.create_task(_starter())
         
-        # Opzionale: salva il task per poterlo cancellare dopo
-        app.state.background_task = task
+        # Schedula solo SFEI_init (senza ElasticSearch check) ogni 4 ore
+        scheduler.add_job(
+            _run_sfei_init,
+            'interval',
+            hours=settings.SCHEDULER_INTERVAL_HOURS,
+            #minutes=1,  # per test
+            id='sfei_init_job',
+            replace_existing=True
+        )
         
-        logger.info("✅ FastAPI avviato, background task in corso...")
-        # startup_event() finisce subito → FastAPI diventa ready
+        scheduler.start()
+        logger.info("Applicazione pronta - SFEI_init schedulata ogni 4 ore")
+        
+        yield
+        
+        # Shutdown
+        logger.info("Shutdown applicazione - fermo scheduler")
+        scheduler.shutdown(wait=True)
+    
+    return lifespan
 
-    @app.on_event("shutdown") 
-    async def shutdown_event():
-        # Cancella gracefully il background task
-        if hasattr(app.state, 'background_task'):
-            app.state.background_task.cancel()
-            
-
+def get_app():
+    services = [provider() for provider in providers]
+    container = make_async_container(*services)
+    
+    app = FastAPI(
+        title="yProvSearch",
+        description="Servizio di ricerca provenance all'interno di yProvStore",
+        version="1.0.0",
+        lifespan=create_lifespan(container)
+    )
+    app.include_router(root_routes)
+    setup_dishka(container=container, app=app)
+    
     return app

@@ -13,6 +13,8 @@ class Settings(BaseSettings):
 
     USE_LOCAL_EMBEDDER:bool= True
 
+    SCHEDULER_INTERVAL_HOURS: int = 4 
+
     class Config:
         env_file =".env"
 

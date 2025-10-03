@@ -36,11 +36,12 @@ class MultiMatchResponse(BaseModel):
 async def search(
     query: str,
     multi_match_search: Annotated[Multi_match_search, FromDishka()],
+    other_versions: bool = False,
     date_from: Optional[date] = None,
     date_to: Optional[date] = None,
     version: Optional[int] = None,
-    yProvIstance: Optional[str] = None,
-    other_versions: Optional[bool] = True
+    yProvIstance: Optional[str] = None
+    
 ) -> List[MultiMatchResponse]:
     filters = {
         "date_from": date_from,

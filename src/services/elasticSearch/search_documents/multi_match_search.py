@@ -19,55 +19,27 @@ class Multi_match_search:
     async def search(self, query: str, addFilters: Dict, include_all_versions: bool = False, timeout: float = 10):
         must=[]
         filters=[]
+
         async def _perform_search():
             logger.debug(f"eseguo la ricerca su elastic search ancora non ce timeout avvio perform search")
 
-            if query:
-                must.append({
+            bool_query = {
+                "must":{
                     "multi_match": {
-                        "query": query,
-                        "fields": ["title", "description", "keywords", "author"]
-                    }
-                })
-
-            if addFilters: 
-                if addFilters.get("date_from"):   
-                    filters.append({
-                        "range": {
-                            "created_at": {   
-                                "gte": addFilters["date_from"]
-                            }
+                            "query": query,
+                            "fields": ["title", "description", "keywords", "author"]
                         }
-                    })
+                }
+            }
 
-                if addFilters.get("date_to"):
-                    filters.append({
-                        "range": {
-                            "created_at": {"lte": addFilters["date_to"]}
-                        }
-                    })
-
-                if addFilters.get("version"):
-                    filters.append({
-                        "term": {
-                            "version": addFilters["version"]
-                        }
-                    })
-
-                if addFilters.get("yProvIstance"):
-                    filters.append({
-                        "term": {
-                            "yProvIstance": addFilters["yProvIstance"]
-                        }
-                    })
+            # Aggiungi filtri se presenti
+            if addFilters:
+                bool_query["filter"] = await self._add_filters(addFilters)
 
 
-            body={
-                "query":{
-                    "bool": {
-                        "must": must,
-                        "filter": filters
-                    }
+            body = {
+                "query": {
+                    "bool": bool_query
                 },
                 "collapse": {
                     "field": "lineage"
@@ -80,8 +52,7 @@ class Multi_match_search:
                     "excludes": ["semantic_embedding"]
                 },
                 "size": 10
-            }
-            
+            }        
             logger.debug(f"eseguo la ricerca su elastic search ancora non ce timeout")
 
             response = await self.es_conn.client.search(
@@ -97,6 +68,8 @@ class Multi_match_search:
         
         return await safe_es_call(_perform_search(), operation_type="search", timeout=timeout)
     
+
+
 
 
 
@@ -194,6 +167,42 @@ class Multi_match_search:
                 results.append(result)
         
         return results            
+    
+
+    async def _add_filters(self, filters:Dict): 
+        _filters=[]
+        if filters:
+            if filters.get("date_from"):   
+                    _filters.append({
+                        "range": {
+                            "created_at": {   
+                                "gte": filters["date_from"]
+                            }
+                        }
+                    })
+
+            if filters.get("date_to"):
+                _filters.append({
+                    "range": {
+                        "created_at": {"lte": filters["date_to"]}
+                    }
+                })
+
+            if filters.get("version"):
+                _filters.append({
+                    "term": {
+                        "version": filters["version"]
+                    }
+                })
+
+            if filters.get("yProvIstance"):
+                _filters.append({
+                    "term": {
+                        "yProvIstance": filters["yProvIstance"]
+                    }
+                })
+        return _filters
+
             
 
 
