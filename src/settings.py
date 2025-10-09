@@ -1,7 +1,7 @@
 from pydantic_settings import BaseSettings
 
 class Settings(BaseSettings):
-    ES_HOST: str
+    ELASTICSEARCH_URL: str
     ES_USER: str
     ES_PASSWORD: str
     INDEX_NAME: str = "documents"   

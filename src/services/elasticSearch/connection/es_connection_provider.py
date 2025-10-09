@@ -1,7 +1,5 @@
 import logging
-from settings import settings
 from .es_connection import ElasticSearchConnection
-from ..search_documents.multi_match_search import Multi_match_search
 from dishka import Provider, provide, Scope
 from typing import AsyncGenerator
 
@@ -13,7 +11,7 @@ class ElasticSearchService(Provider): #estensione della factory class Provider d
                               
     #qua specifichiamo il tipo da ritornare della funzione, ovvero un generatore asincrono che produce oggetti di tipo ElasticSearchConnection (il generatore è un iteratore)
     async def get_es_connection(self) ->AsyncGenerator [ElasticSearchConnection, None]: #dishka riceve il generatore e riconoce che gli restituisce un oggetto di tipo ElasticSearchConnection
-        conn=ElasticSearchConnection(host=settings.ES_HOST) #qua diamo l'host al gestore della connessione() potrebbe essere anche una lista)
+        conn=ElasticSearchConnection() #qua diamo l'host al gestore della connessione() potrebbe essere anche una lista)
         try:
             await conn.connect()
             yield conn
