@@ -4,10 +4,10 @@ services:
     container_name: elasticsearch
     environment:
       - discovery.type=single-node
-      - xpack.security.enabled=true  # ✅ Security abilitata
-      - ELASTIC_PASSWORD=${ES_PASSWORD}  # Password per elastic user
+      - xpack.security.enabled=true  
+      - ELASTIC_PASSWORD=${ES_PASSWORD}  
       - ES_JAVA_OPTS=-Xms512m -Xmx512m
-      # ⭐ NON specificare manualmente i path SSL, lascia che ES li generi
+      
     networks:
       - elastic-network
     ports:
@@ -35,7 +35,7 @@ services:
     ports:
       - 8001:8001
     volumes:
-      - es-certs:/app/certs:ro  # Monta i certificati generati da ES
+      - es-certs:/app/certs:ro  
 
 networks:
   elastic-network:
