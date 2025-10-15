@@ -2,4 +2,4 @@
 __pycache__/
 .env
 jsonDoc/
-modelCache/
+src/modelCache/

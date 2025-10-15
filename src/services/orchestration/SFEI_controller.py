@@ -2,28 +2,19 @@ import logging
 from services.elasticSearch.connection.es_connection import ElasticSearchConnection
 from services.embedding.embedder import EmbeddingService
 from services.indexer.indexer import IndexService
+from services.registry.registry import RegistryService
 from services.scraper.scraper import ScraperService
-from services.fetcher.fetcher import DocumentFetcher
 from .last_check_timestamp import TimestampManager
 from services.elasticSearch.update_documents.lineage_update_in_v1 import LineageUpdateV1
 
-from utils.error_handlers import safe_es_call
+
 from dataclasses import dataclass
 from typing import List, Dict
 
 logger = logging.getLogger(__name__)
 
 
-@dataclass
-class ProcessingStats:
-    total_yProv_Istances: int =0,
-    processed_istances : int = 0,
-    processed_documents : int = 0,
-    failed_documents: int = 0,
-    errors: List[str] = None
-    def __post_init__(self):
-        if self.errors is None:
-            self.errors = []
+
 
 
 
@@ -32,9 +23,9 @@ class SFEIController ():
     def __init__ (self,
                     es_conn: ElasticSearchConnection,
                     embedder : EmbeddingService, 
-                    fetcher: DocumentFetcher, 
+                    fetcher: ScraperService, 
                     indexer: IndexService, 
-                    scraper: ScraperService, 
+                    scraper: RegistryService, 
                     timestamp: TimestampManager,
                     v1_lineage_updater: LineageUpdateV1
                     ):

@@ -1,7 +1,7 @@
 
 import logging
 from services.elasticSearch.connection.es_connection import ElasticSearchConnection
-from ..fetcher.fetcher import DocumentFetcher
+from ..scraper.scraper import ScraperService
 from elasticsearch.helpers import async_bulk
 from services.embedding.embedder import EmbeddingService
 from settings import settings
@@ -11,7 +11,7 @@ logger =logging.getLogger(__name__)
 
 
 class IndexService():
-    def __init__(self, es_conn: ElasticSearchConnection, fetcher: DocumentFetcher, embedder: EmbeddingService):
+    def __init__(self, es_conn: ElasticSearchConnection, fetcher: ScraperService, embedder: EmbeddingService):
         self.es_conn=es_conn
         self.fetcher=fetcher #il fetcher restituisce un generatore (iteratore)
         self.embedder= embedder
