@@ -3,3 +3,5 @@ __pycache__/
 .env
 jsonDoc/
 src/modelCache/
+src/services/stac_catalog/STAC/
+STAC/

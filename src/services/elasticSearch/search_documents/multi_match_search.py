@@ -59,7 +59,6 @@ class Multi_match_search:
                 index=settings.INDEX_NAME,
                 body=body
             )
-            logger.debug(f"arrivata la risposta da elastic search per la query")
             
             # Se dobbiamo includere tutte le versioni, raccogli i lineage trovati
             

@@ -1,7 +1,7 @@
 import logging
 from sentence_transformers import SentenceTransformer
 
-from typing import Dict, List
+from typing import Dict, List, Tuple
 import asyncio
 from settings import settings
 
@@ -10,85 +10,136 @@ logger = logging.getLogger(__name__)
 
 class EmbeddingService:
     def __init__(self, model_name: str = "all-MiniLM-L6-v2"):
-        
-        self.model= SentenceTransformer(model_name, local_files_only=settings.USE_LOCAL_EMBEDDER)
+        self.model = SentenceTransformer(model_name, local_files_only=settings.USE_LOCAL_EMBEDDER)
         if settings.USE_LOCAL_EMBEDDER:
             logger.debug("The embedding model is loaded from the local cache")
-        else :
-            logger.warning("The embedding model is checking for updates on internet, to disable set USE_LOCAL_EMBEDDER to True")
-
-
-
-    async def add_embeddings_to_batch(self, documents: List[Dict]) -> List[Dict]:
-        
-        try: 
-            #asyncio.gather(*[...]) esegue operazioni asincrone in parallelo
-            texts = await asyncio.gather(*[self._combine_fields(doc) for doc in documents])
-            logger.debug(f"Calcolo embeddings per {len(texts)} documenti")
-
-
-
-            #asyncio.to_thread() esegue codice sincrono in un thread separato
-            #self.model.encode() è SINCRONO ma pesante computazionalmente
-            embeddings = await asyncio.to_thread(
-                self.model.encode, 
-                texts,
-                convert_to_tensor=False,  # restituisce liste Python, non tensori
-                normalize_embeddings=True  # Normalizza per cosine similarity
-            )
-
-            enriched_documents= []
-            for doc, embedding in zip(documents, embeddings):
-                enriched_doc= doc.copy()
-                enriched_doc['_source']['semantic_embedding']=embedding.tolist()
-                enriched_documents.append(enriched_doc)
-
-            logger.info(f"Embeddings calcolati con successo per {len(enriched_documents)} documenti")
-            return enriched_documents
-               
-
-        except Exception as e:
-            logger.error(f"error during the embeddings:{e}")
-            raise
-
-
-
-    async def _combine_fields(self, document: Dict)-> str:
-        """
-        Combina title e description per creare il testo da embeddare
-        
-        Args:
-            document: Documento con campi title, description, etc.
-            
-        Returns:
-            Testo combinato pronto per l'embedding
-        """
-        title = (document.get('_source', {}).get('title') or '').strip()
-        description = (document.get('_source', {}).get('description') or '').strip()
-        keywords = document.get('_source', {}).get('keywords') or []
-        author = (document.get('_source', {}).get('author') or '').strip()
-        # Se keywords è una lista, la trasformo in stringa
-        keywords_text = ', '.join([kw.strip() for kw in keywords if isinstance(kw, str)])
-
-
-
-        full_text = []
-
-        if title:
-            full_text.append(title)
-        if description:
-            full_text.append(description)
-        if keywords:
-            full_text.append(f"Keywords:{keywords}")
-        if author:
-            full_text.append(f"Author: {author}")
-        if full_text:
-            return '.'.join(full_text)
         else:
-            return "no content avaible"
-
-
- 
+            logger.warning("The embedding model is checking for updates on internet, to disable set USE_LOCAL_EMBEDDER to True")
+    
+    async def add_embeddings_to_batch(self, documents: List[Dict]) -> Tuple[List[Dict], List[Dict]]:
+        """
+        Processa documenti e restituisce (successi, fallimenti).
+        
+        Returns:
+            Tuple[List[Dict], List[Dict]]: (documenti arricchiti, documenti falliti con error info)
+        """
+        failed = []
+        success = []
+        
+        # Fase 1: Combina campi e traccia documenti validi
+        valid_items = []  # Lista di (index, doc, text)
+        
+        for idx, doc in enumerate(documents):
+            try:
+                text = self._combine_fields(doc)
+                if text is None:
+                    logger.warning(f"Document {idx} skipped: all fields empty or invalid")
+                    failed.append({
+                        "doc": doc,
+                        "error": "empty fields",
+                        "index": idx
+                    })
+                    continue
+                
+                valid_items.append((idx, doc, text))
+                
+            except Exception as e:
+                logger.error(f"Error combining fields for document {idx}: {e}")
+                failed.append({
+                    "doc": doc,
+                    "error": f"Field combination error: {str(e)}",
+                    "index": idx
+                })
+        
+        # Se non ci sono documenti validi, restituisci subito
+        if not valid_items:
+            logger.warning("No valid documents to process")
+            return [], failed
+        
+        # Fase 2: Genera embeddings solo per documenti validi
+        try:
+            valid_texts = [text for _, _, text in valid_items]
+            logger.debug(f"Generating embeddings for {len(valid_texts)} valid documents")
+            
+            embeddings = await asyncio.to_thread(
+                self.model.encode,
+                valid_texts,
+                convert_to_tensor=False,
+                normalize_embeddings=True
+            )
+            
+        except Exception as e:
+            logger.critical(f"Fatal error during embedding generation: {e}")
+            # Tutti i documenti validi diventano falliti
+            for idx, doc, _ in valid_items:
+                failed.append({
+                    "doc": doc,
+                    "error": f"Embedding batch failed: {str(e)}",
+                    "index": idx
+                })
+            return [], failed
+        
+        # Fase 3: Assegna embeddings ai documenti
+        for (idx, doc, text), embedding in zip(valid_items, embeddings):
+            try:
+                # Validazione embedding
+                if embedding is None or len(embedding) == 0:
+                    raise ValueError("Empty embedding returned")
+                
+                enriched_doc = doc.copy()
+                enriched_doc["_source"]["semantic_embedding"] = embedding.tolist()
+                success.append(enriched_doc)
+                
+            except Exception as e:
+                logger.error(f"Error assigning embedding to document {idx}: {e}")
+                failed.append({
+                    "doc": doc,
+                    "error": f"Embedding assignment error: {str(e)}",
+                    "index": idx
+                })
+        
+        logger.info(
+            f"Embedding batch completed: {len(success)} successes, "
+            f"{len(failed)} failures out of {len(documents)} total documents"
+        )
+        
+        return success, failed
+    
+    def _combine_fields(self, document: Dict) -> str | None:
+        """
+        Combina i campi rilevanti del documento in un'unica stringa.
+        
+        Returns:
+            str | None: Testo combinato o None se tutti i campi sono vuoti
+        """
+        src = document.get('_source', {})
+        
+        # Estrai e pulisci campi
+        title = (src.get('title') or '').strip()
+        description = (src.get('description') or '').strip()
+        author = (src.get('author') or '').strip()
+        
+        # Gestisci keywords (può essere stringa o lista)
+        keywords = src.get('keywords') or []
+        if isinstance(keywords, str):
+            keywords = [keywords]
+        elif not isinstance(keywords, list):
+            keywords = []
+        
+        keywords_text = ', '.join([kw.strip() for kw in keywords if isinstance(kw, str) and kw.strip()])
+        
+        # Costruisci testo finale
+        parts = []
+        if title:
+            parts.append(title)
+        if description:
+            parts.append(description)
+        if keywords_text:
+            parts.append(f"Keywords: {keywords_text}")
+        if author:
+            parts.append(f"Author: {author}")
+        
+        return '. '.join(parts) if parts else None
         
 
     async def _get_query_embedding(self, query: str) -> List[float]:

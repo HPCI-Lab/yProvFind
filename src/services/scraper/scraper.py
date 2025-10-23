@@ -10,13 +10,13 @@ import asyncio
 from settings import settings
 import os
 from datetime import datetime
-FOLDER_PATH = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(__file__))), "jsonDoc")
 
 logger =logging.getLogger(__name__)
 
 logging.getLogger("asyncio").setLevel(logging.INFO)
 logging.getLogger("httpx").setLevel(logging.WARNING)
 logging.getLogger("httpcore").setLevel(logging.INFO)
+
 
 
 class ScraperService:
@@ -91,7 +91,7 @@ class ScraperService:
                     logger.warning(f"Metadata failed for {doc.get('pid')}: {metadata}")
                     metadata = {"title": "", "description": "", "keywords": "", "author":""}  # metadata vuoti
                 
-                
+                #creazione lista per aggiornare la lineage delle versioni 1 con l'indicizzazione della versione 2
                 if doc["version"]==2 and doc.get("parent_document_pid"):
                     v1_list[doc["parent_document_pid"]]= doc["lineage_id"]
                 
@@ -102,6 +102,7 @@ class ScraperService:
                         "pid": doc["pid"],
                         "version": doc["version"], 
                         "owner_email": doc["owner_email"],
+                        "storage_url": doc["storage_url"],
                         "parent_document_pid": doc["parent_document_pid"],
                         "lineage": doc.get("lineage_id", None),
 

@@ -9,6 +9,7 @@ from .orchestration.SFEI_provider import SFEIProvider
 from .orchestration.last_check_timestamp import TimestamProvider
 from .elasticSearch.index_manager.create import IndexCreateProvider
 from .elasticSearch.update_documents.update_documents_provider import UpdateDocumentsProvider
+from .stac_catalog.STAC_provider import STACProvider
 
 __all__ = ("providers",)
 
@@ -24,5 +25,6 @@ providers =[ElasticSearchService,
             TimestamProvider,
             AllDocumentsProvider,
             IndexCreateProvider,
-            UpdateDocumentsProvider
+            UpdateDocumentsProvider,
+            STACProvider
             ]

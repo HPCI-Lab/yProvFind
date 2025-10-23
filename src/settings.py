@@ -15,6 +15,8 @@ class Settings(BaseSettings):
 
     SCHEDULER_INTERVAL_HOURS: int = 4 
 
+    STAC_BASE_PATH: str = "./STAC"
+
     class Config:
         env_file =".env"
 

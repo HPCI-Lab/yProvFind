@@ -2,7 +2,7 @@ import logging
 from services.elasticSearch.connection.es_connection import ElasticSearchConnection
 from settings import settings
 from utils.error_handlers import safe_es_call
-from typing import List, Dict, Any, Optional
+from typing import List, Dict, Any
 
 logger = logging.getLogger(__name__)
 

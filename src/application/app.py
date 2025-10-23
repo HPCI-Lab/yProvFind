@@ -54,13 +54,13 @@ def create_lifespan(container):
             _run_sfei_init,
             'interval',
             hours=settings.SCHEDULER_INTERVAL_HOURS,
-            #minutes=1,  # per test
+            #minutes=2,  # per test
             id='sfei_init_job',
             replace_existing=True
         )
         
         scheduler.start()
-        logger.info("Applicazione pronta - SFEI_init schedulata ogni 4 ore")
+        logger.info(f"Applicazione pronta - SFEI_init schedulata ogni {settings.SCHEDULER_INTERVAL_HOURS} ore")
         
         yield
         
@@ -75,8 +75,8 @@ def get_app():
     container = make_async_container(*services)
     
     app = FastAPI(
-        title="yProvSearch",
-        description="Servizio di ricerca provenance all'interno di yProvStore",
+        title="yProvFind",
+        description="Federated Index and Discovery - Servizio di ricerca provenance di yProv",
         version="1.0.0",
         lifespan=create_lifespan(container)
     )
