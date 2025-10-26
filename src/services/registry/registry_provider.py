@@ -3,6 +3,6 @@ from .registry import RegistryService
 
 
 class RegisryProvider(Provider): 
-    @provide(scope=Scope.REQUEST)
-    async def _ScraperProvider(self)->RegistryService:
+    @provide(scope=Scope.APP)
+    def _RegistryProvider(self)->RegistryService:
         return RegistryService()

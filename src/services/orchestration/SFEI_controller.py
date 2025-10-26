@@ -40,23 +40,23 @@ class SFEIController ():
         self.STACManager= STACManager
         
 
-        #self.stats = ProcessingStats()
+       
 
     
     async def SFEI_init(self):
         es_total_success=0
-        v1_total_updated=0
+        #v1_total_updated=0
         embed_total_success=0
 
         es_total_errors=[]
-        v1_total_errors=[]
+        #v1_total_errors=[]
         embed_total_failed=[]
 
         try: 
 
 
             #registry
-            yProvIstanceList= await self.scraper.getList()
+            yProvIstanceList= await self.scraper.update_active_list()
             logger.debug(f"found {len(yProvIstanceList)} istances")         
             if not yProvIstanceList:
                 logger.warning("No yProvStore instances found, process interrupted")
@@ -64,7 +64,7 @@ class SFEIController ():
             
             
             for istance in yProvIstanceList:
-                last_fetch = await self.timestamp.get_last_fetch(istance)
+                last_fetch = self.timestamp.get_last_fetch(istance)
                 
                 #scraper
                 async for documents, v1_list in self.fetcher.fetch_document_stream(istance, last_fetch):
@@ -79,25 +79,26 @@ class SFEIController ():
                     es_total_success += es_success
                     es_total_errors.extend(es_errors)
 
+                    """
                     #version 1 lineage update
                     v1_success, v1_errors = await self.v1_lineage_updater.update_lineage(v1_list)
                     v1_total_updated += v1_success
                     v1_total_errors.extend(v1_errors)
-
+                    """
                     #STAC catalog update
                     await asyncio.to_thread(self.STACManager.catalogListUpdate, documents)
                     
 
                     
-                await self.timestamp.update_last_fetch(istance)
+                self.timestamp.update_last_fetch(istance)
                     
             return {
                 "ES_successfully_indexed": es_total_success,
                 "ES_error_count": len(es_total_errors),
-                "embed_success": embed_total_success,        # ← Cambiato
-                "embed_error": len(embed_total_failed),      # ← Cambiato
-                "update_v1_lineage": v1_total_updated,
-                "error_v1_lineage": len(v1_total_errors)
+                "embed_success": embed_total_success,       
+                "embed_error": len(embed_total_failed),     
+                #"update_v1_lineage": v1_total_updated,
+                #"error_v1_lineage": len(v1_total_errors)
             }
 
                     

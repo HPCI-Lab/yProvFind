@@ -1,41 +1,40 @@
+name: yProvFindDocker
+
 services:
   elasticsearch:
     image: docker.elastic.co/elasticsearch/elasticsearch:9.0.3
     container_name: elasticsearch
     environment:
       - discovery.type=single-node
-      - xpack.security.enabled=true  
-      - ELASTIC_PASSWORD=${ES_PASSWORD}  
-      - ES_JAVA_OPTS=-Xms512m -Xmx512m
-      
+      - xpack.security.enabled=true
+      - xpack.security.transport.ssl.enabled=false
+      - xpack.security.http.ssl.enabled=false
+      - ELASTIC_PASSWORD=${ES_PASSWORD}
     networks:
       - elastic-network
-    ports:
-      - 9200:9200
     volumes:
       - es-data:/usr/share/elasticsearch/data
-      - es-certs:/usr/share/elasticsearch/config/certs
     healthcheck:
-      test: ["CMD-SHELL", "curl -k -u elastic:${ES_PASSWORD} https://localhost:9200/_cluster/health || exit 1"]
+      test: ["CMD-SHELL", "curl -f -u elastic:${ES_PASSWORD} http://localhost:9200/_cluster/health || exit 1"]
       interval: 10s
       timeout: 5s
       retries: 10
-      start_period: 40s
+      start_period: 30s
 
   yprovsearch:
     build: .
-    container_name: yprovsearch
+    container_name: yprovfind
     depends_on:
       elasticsearch:
         condition: service_healthy
     env_file:
       - .env
+    environment:
+      - ELASTICSEARCH_URL=http://elasticsearch:9200
     networks:
       - elastic-network
     ports:
-      - 8001:8001
-    volumes:
-      - es-certs:/app/certs:ro  
+      - 8002:8002
 
 networks:
   elastic-network:
@@ -43,4 +42,3 @@ networks:
 
 volumes:
   es-data:
-  es-certs:

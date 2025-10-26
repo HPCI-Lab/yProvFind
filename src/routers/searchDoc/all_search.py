@@ -9,12 +9,12 @@ from datetime import date
 
 
 get_all_router= APIRouter(route_class=DishkaRoute,
-                          prefix="",
+                          prefix="/search",
                           tags=["search"],
                           )
 
 @get_all_router.get("/all",
-                    summary = " get all docuemnts of the index documents")
+                    summary = " get all docuements of the index documents")
 async def get_all_documents(all: Annotated[AllDocuments, FromDishka()],
                                     other_versions: bool = False, 
                                     date_from: Optional[date] = None,

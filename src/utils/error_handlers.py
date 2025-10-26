@@ -25,7 +25,7 @@ async def safe_es_call(coro, operation_type: str = "search", timeout: int = 30):
         raise HTTPException(status_code=504, detail=f"{operation_type.capitalize()} operation timed out")
 
     except NotFoundError as e:
-        logger.warning(f"{operation_type.capitalize()} target not found: {e}")
+        logger.warning(f"{operation_type.capitalize()} target not found: {e.info if hasattr(e, 'info') else e}")
         raise HTTPException(status_code=404, detail=f"{operation_type.capitalize()} target not found")
 
     except ConnectionError as e:

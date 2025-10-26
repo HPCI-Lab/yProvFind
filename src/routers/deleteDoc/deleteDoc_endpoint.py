@@ -36,15 +36,4 @@ async def delete_all_doc_index(index_name: Annotated[str, Query(example="documen
 
 
 
-class DeleteIndex(BaseModel):
-    status: str =Field(..., description="Stato finale dell'operazione", example="success")
-    index: str = Field (..., description="Nome dell'indice su cui è stata effettuata l'operazione")    
-
-@delete_router.delete("/index",
-                      summary="Eliminazione totale di un indice",
-                      description="permette l'eliminazione di un indice in modo permanente da elasti search, compresa mappatura e file al suo interno",
-                      response_model=DeleteIndex
-                      )
-async def delete_index(index_name:  Annotated[str, Query(example="documents")], delete_service: Annotated[DeleteDocuments, FromDishka()])-> DeleteIndex:
-    return await delete_service.delete_index(index_name)
 

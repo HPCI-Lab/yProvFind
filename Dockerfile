@@ -29,4 +29,4 @@ COPY src/modelCache /root/.cache/huggingface/hub/
 EXPOSE 8001
 
 # Comando per avviare l'app
-CMD ["uv", "run", "src/main.py", "--host", "0.0.0.0", "--port", "8001"]
+CMD ["uv", "run", "src/main.py", "--host", "0.0.0.0", "--port", "8002"]

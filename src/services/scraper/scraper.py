@@ -55,7 +55,7 @@ class ScraperService:
         url = f"{base_url}/documents"
         params = {"page": page, "page_size": page_size}
         if update_after:
-            params["created_after"]= update_after
+            params["updated_after"]= update_after
         # Usa httpx async
         try:
             response = await self.client.get(url, params=params)
@@ -105,7 +105,6 @@ class ScraperService:
                         "storage_url": doc["storage_url"],
                         "parent_document_pid": doc["parent_document_pid"],
                         "lineage": doc.get("lineage_id", None),
-
                         "title": metadata.get("title", ""),
                         "description": metadata.get("description", ""),
                         "keywords": metadata.get("keywords", ""),
@@ -161,7 +160,7 @@ class ScraperService:
 
 
 
-
+"""""
 
     async def fetch_documents_async(self):
         logger.debug("documents loaded from local directory")
@@ -175,7 +174,7 @@ class ScraperService:
                     yield {"_index": settings.INDEX_NAME, "_source": doc}   #posso usare i generator con elastic search perche che sia una lista o un generator essi fanno parte della sottocategoria di iterator                                                        
                                                                         #e le api bulk di elasticsearch accettano qualsiasi iteratore e quindi anche un generator va bene
                                                                         #questo è utile perche con i generator non c'è da salvare in memoria una lista ma funziona poco alla volta e quindi scalabile anche su migliaia di file
-
+"""
 
 
     

@@ -186,7 +186,7 @@ class SemanticSearch():
             if addFilters:
                 filters = await self._add_filters(addFilters)
                 bool_query["filter"] = filters
-                knn_query["filter"] = filters  # I filtri vanno anche in knn!
+                knn_query["filter"] = filters  
 
             search_body = {
                 "knn": knn_query,
@@ -226,7 +226,7 @@ class SemanticSearch():
             logger.debug(f"Lineages found: {lineages}")
             
             if lineages:
-                # Seconda query: recupera TUTTE le versioni per i lineage trovati
+                # Seconda query recupera TUTTE le versioni per i lineage trovati
                 versions_body = {
                     "query": {
                         "terms": {
@@ -284,11 +284,13 @@ class SemanticSearch():
                             for v in all_versions
                             if v["id"] != hit["_id"]
                         ]
-                        
+
+                        """"
                         # Log per debugging
                         logger.debug(f"Document {hit['_id']} (v{hit['_source'].get('version')}) has {len(result['other_versions'])} other versions")
                         versions_list = [v['source'].get('version') for v in result['other_versions']]
                         logger.debug(f"Other versions: {versions_list}")
+                        """
                         
                     else:
                         result["other_versions"] = []

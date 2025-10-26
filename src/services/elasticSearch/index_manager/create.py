@@ -36,7 +36,3 @@ class CreateIndex():
             }
 
 
-class IndexCreateProvider(Provider):
-    @provide(scope=Scope.REQUEST)
-    async def get_create_index(self, es_conn: ElasticSearchConnection)-> CreateIndex:
-        return CreateIndex(es_conn)

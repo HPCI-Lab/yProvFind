@@ -7,7 +7,7 @@ from .scraper.scraper_provider import ScraperProvider
 from .registry.registry_provider import RegisryProvider
 from .orchestration.SFEI_provider import SFEIProvider
 from .orchestration.last_check_timestamp import TimestamProvider
-from .elasticSearch.index_manager.create import IndexCreateProvider
+from .elasticSearch.index_manager.index_manager_provider import IndexManagerProvider
 from .elasticSearch.update_documents.update_documents_provider import UpdateDocumentsProvider
 from .stac_catalog.STAC_provider import STACProvider
 
@@ -24,7 +24,7 @@ providers =[ElasticSearchService,
             SFEIProvider,
             TimestamProvider,
             AllDocumentsProvider,
-            IndexCreateProvider,
+            IndexManagerProvider,
             UpdateDocumentsProvider,
             STACProvider
             ]

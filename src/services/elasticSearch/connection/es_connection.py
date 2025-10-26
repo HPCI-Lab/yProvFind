@@ -6,7 +6,7 @@ from utils.error_handlers import safe_es_call
 import asyncio
 
 logger = logging.getLogger(__name__)
-#ricordare che anche elasticsearch ha il suo logger, per cambiare la sua configurazione bisogna fare logging.getLogger("elasticsearch") e cambiare la sua configurazione
+
 
 BASE_DIR = os.path.dirname(__file__)
 
@@ -15,11 +15,10 @@ if os.path.exists('/app/certs/http_ca.crt'):
     logger.debug("caricato certificato da docker")
     CERTIFICATE_PATH = '/app/certs/http_ca.crt'
 else:
-    # Fallback per sviluppo locale
     logger.debug("caricato certificato da locale")
     CERTIFICATE_PATH = os.path.join(BASE_DIR, "http_ca.crt")
 
-
+ 
 class ElasticSearchConnection: #classe per gestire la connessione a elasticsearch
     def __init__(self):
         self.host = settings.ELASTICSEARCH_URL
@@ -28,28 +27,41 @@ class ElasticSearchConnection: #classe per gestire la connessione a elasticsearc
 
 
 
-    async def connect(self, attempts: int = 5, delay: int = 5): 
+    async def connect(self, attempts: int = 5, delay: int = 12): 
         if self.client is None: 
-            for a in range (1, attempts):
+            for a in range(1, attempts + 1):
                 try:
-                    logger.debug(f"tentaivo di connesione numero {a}")
-                    self.client = AsyncElasticsearch(hosts=self.host,  
-                                                    basic_auth=(settings.ES_USER, settings.ES_PASSWORD),
-                                                    ca_certs=CERTIFICATE_PATH,  
-                                                    verify_certs=True )
+                    logger.debug(f"connection attempt {a}/{attempts}")
+                    self.client = AsyncElasticsearch(
+                        hosts=self.host,  
+                        basic_auth=(settings.ES_USER, settings.ES_PASSWORD),
+                        max_retries=1, 
+                        #ca_certs=CERTIFICATE_PATH,  
+                        verify_certs=False
+                    )
                     await safe_es_call(self.client.info(), "admin")
-                    return 
+                    logger.info(f"Elasticsearch connected successfully on attempt {a}")
+                    return
                 except (ConnectionError, Exception) as e:
-                    logger.warning(f"Connessione a Elasticsearch fallita ({e}).")
+                    logger.warning(f"Elasticsearch connection failed (attempt {a}/{attempts}): {e}")
+
+                    
+                    if self.client is not None:
+                        try:
+                            await self.client.close()
+                        except Exception as close_err:
+                            logger.debug(f"Error while closing ES client: {close_err}")
+                        finally:
+                            self.client = None
+
+                    
                     if a < attempts:
-                        wait = delay * a
-                        logger.info(f"Riprovo tra {wait} secondi...")
-                        await asyncio.sleep(wait)
+                        
+                        logger.info(f"Retry in {delay} seconds...")
+                        await asyncio.sleep(delay)
                     else:
-                        logger.error("Impossibile connettersi a Elasticsearch dopo vari tentativi.")
-                        self.client = None
-                        return  # <-- non solleva eccezione: avvia comunque FastAPI
-                
+                        logger.error(f"Elasticsearch connection failed after {attempts} attempts")
+                        return
 
 
 

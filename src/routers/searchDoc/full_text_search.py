@@ -27,7 +27,7 @@ class MultiMatchResponse(BaseModel):
 
 #qua usiamo Annotated perche aggiungiamo al type hint "Multi_match_search" il metadata "FromDishka"
 #questo ci serve perche cosi qunado fast aspi va a vedere il tipe hint e legge dai metadati FromDishka lascia gestire la dipendenza a dishka invece che usare le sue
-@query_router.get("",     
+@query_router.get("/fullText",     
                     summary="Ricerca full-text semplice",
                     description="Ricerca semplice basata su algoritmo BM25 con tokenizzazione e indice invertito",
                     response_description="Lista di documenti trovati ordinati per score",

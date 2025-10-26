@@ -1,8 +1,6 @@
 import logging
 from ..connection.es_connection import ElasticSearchConnection
 from settings import settings
-from elasticsearch import NotFoundError
-import elasticsearch.exceptions as ElasticsearchException
 from utils.error_handlers import safe_es_call
 
 logger = logging.getLogger(__name__)
@@ -41,17 +39,6 @@ class DeleteDocuments:
 
 
         
-    async def delete_index(self, index_name:str):
-
-        async def _delete():
-            results = await self.client.indices.delete(index=index_name)
-            logger.debug(f"eliminated index: {index_name}")
-            return {
-                "status": "success",
-                "index" : index_name
-            }
-
-        return await safe_es_call(_delete(), "delete")
 
 
         

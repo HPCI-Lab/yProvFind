@@ -15,7 +15,10 @@ class Settings(BaseSettings):
 
     SCHEDULER_INTERVAL_HOURS: int = 4 
 
-    STAC_BASE_PATH: str = "./STAC"
+    STAC_BASE_PATH: str = "STAC"
+
+    REGISTRY_BASE_PATH : str = "registryList"
+    REGISTRY_FILE_NAME: str = "registryList.json"
 
     class Config:
         env_file =".env"

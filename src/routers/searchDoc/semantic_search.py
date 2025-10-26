@@ -13,7 +13,7 @@ logger = logging.getLogger(__name__)
 
 
 semantic_query_router= APIRouter(route_class= DishkaRoute,
-                        prefix="/semantic_searc",
+                        prefix="/search",
                         tags=["search"])
 
 
@@ -29,7 +29,7 @@ class SemanticSearchResponse(BaseModel):
 
 
 @semantic_query_router.get(
-    "/simple",
+    "/semantic",
     response_model=List[SemanticSearchResponse],
     summary="Ricerca semantica semplice",
     description="Esegue una ricerca semantica su Elasticsearch usando embeddings"
@@ -52,7 +52,7 @@ async def semantic_search_endpoint( query: str,
 
 
 
-@semantic_query_router.get("/hybrid_search",
+@semantic_query_router.get("/semanticMultiMatch",
                             response_model=List[SemanticSearchResponse],
                             summary="Ricerca ibrida",
                             description="Esegue una ricerca semantica su Elasticsearch usando embeddings e in parallelo una ricerca multi match full-text con una successiva combinazione dei risultati")
@@ -78,7 +78,7 @@ async def hybrid_search_endpoint(query: str,
 @semantic_query_router.get("/knnMultiMatch",
                             response_model=List[SemanticSearchResponse],
                             summary="Ricerca attraverso il metodo knn",
-                            description="Esegue una ricerca semantica utilizzando il metodo knn e poi gli n risultati li passa in una multi_match search, utile quando sono presenti grandi quantita di file, difatti la ricerca tramite knn ha costo O(log(n)) mentre la riceca full-text ha costo O(n)")
+                            description="integrata la funzinalita di ricerca tramite knn HSNW, un algoritmo che permette di fare la ricerca aproximate Knn ma introduce funzionalita di early stop per dare risultati velocemente e mantenendo comunque una buona precisione")
 async def knn_multiMatch_endpoint(query: str,
                                     semantic: Annotated[SemanticSearch, FromDishka()],
                                     other_versions: bool = False, 
