@@ -21,7 +21,7 @@ services:
       retries: 10
       start_period: 30s
 
-  yprovsearch:
+  yprovfind:
     build: .
     container_name: yprovfind
     depends_on:
@@ -35,6 +35,8 @@ services:
       - elastic-network
     ports:
       - 8002:8002
+    volumes:
+      - ./registryList:/app/registryList
 
 networks:
   elastic-network:
@@ -42,3 +44,4 @@ networks:
 
 volumes:
   es-data:
+  shared-data:

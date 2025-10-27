@@ -5,3 +5,4 @@ jsonDoc/
 src/modelCache/
 src/services/stac_catalog/STAC/
 STAC/
+registryList/

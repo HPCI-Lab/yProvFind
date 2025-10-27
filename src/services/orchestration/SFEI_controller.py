@@ -96,9 +96,7 @@ class SFEIController ():
                 "ES_successfully_indexed": es_total_success,
                 "ES_error_count": len(es_total_errors),
                 "embed_success": embed_total_success,       
-                "embed_error": len(embed_total_failed),     
-                #"update_v1_lineage": v1_total_updated,
-                #"error_v1_lineage": len(v1_total_errors)
+                "embed_error": len(embed_total_failed)
             }
 
                     

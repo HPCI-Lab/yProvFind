@@ -1,0 +1,5 @@
+registryList/
+__pycache__/
+.env
+.git/
+STAC/

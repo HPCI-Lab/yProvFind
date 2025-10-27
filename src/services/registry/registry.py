@@ -26,8 +26,8 @@ class RegistryService():
         self.complete_path = self.data_dir / self.name_file
         self.all_list= self._list_load()
 
-        logger.info(f"📁 Path assoluto file registry: {self.complete_path.resolve()}")
-        logger.info(f"📂 Directory corrente: {Path.cwd()}")
+        #logger.info(f"📁 Path assoluto file registry: {self.complete_path.resolve()}")
+        #logger.info(f"📂 Directory corrente: {Path.cwd()}")
 
         
 

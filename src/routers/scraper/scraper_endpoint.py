@@ -15,6 +15,7 @@ scraper_router= APIRouter(route_class=DishkaRoute,
 
 
 class ScraperResponse(BaseModel):
+        status: str
         ES_successfully_indexed: int
         ES_error_count: int
         embed_success:int

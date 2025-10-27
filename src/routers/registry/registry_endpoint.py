@@ -48,7 +48,7 @@ class RegistryUpdateResponse(BaseModel):
 
 
 @registry_router.post("/update-list", response_model=RegistryUpdateResponse)
-async def update_address_endpoint(address_input: AddressInput, registry: Annotated[RegistryService, FromDishka()]):
+async def add_address_endpoint(address_input: AddressInput, registry: Annotated[RegistryService, FromDishka()]):
     result = registry.update_address_list(str(address_input.address))
     return result
 
