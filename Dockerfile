@@ -22,8 +22,9 @@ COPY ./src /app/src
 
 # Copia la cache del modello Hugging Face
 # (questa cartella contiene i file già scaricati)
-RUN mkdir -p /root/.cache/huggingface/hub
-COPY src/modelCache /root/.cache/huggingface/hub/
+
+#RUN mkdir -p /root/.cache/huggingface/hub
+#COPY src/modelCache /root/.cache/huggingface/hub/
 
 # Espone la porta
 EXPOSE 8001
