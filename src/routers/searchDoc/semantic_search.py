@@ -14,7 +14,7 @@ logger = logging.getLogger(__name__)
 
 semantic_query_router= APIRouter(route_class= DishkaRoute,
                         prefix="/search",
-                        tags=["search"])
+                        tags=["Search"])
 
 
 
@@ -31,8 +31,8 @@ class SemanticSearchResponse(BaseModel):
 @semantic_query_router.get(
     "/semantic",
     response_model=List[SemanticSearchResponse],
-    summary="Ricerca semantica semplice",
-    description="Esegue una ricerca semantica su Elasticsearch usando embeddings"
+    summary="Semantic search",
+    description="Semantic search in Elasticsearch uses vector embeddings of queries and documents to measure similarity via cosine similarity, allowing retrieval of results based on meaning rather than exact keyword matches. The score is between 0 and 1 (1 max similarity, 0 no similarity)"
 )
 async def semantic_search_endpoint( query: str,
                                     semantic: Annotated[SemanticSearch, FromDishka()],
@@ -52,10 +52,12 @@ async def semantic_search_endpoint( query: str,
 
 
 
-@semantic_query_router.get("/semanticMultiMatch",
+@semantic_query_router.get("/semantic-fulltext",
                             response_model=List[SemanticSearchResponse],
-                            summary="Ricerca ibrida",
-                            description="Esegue una ricerca semantica su Elasticsearch usando embeddings e in parallelo una ricerca multi match full-text con una successiva combinazione dei risultati")
+                            summary="Combines semantic search with full-text search",
+                            description="Hybrid search in Elasticsearch combines full-text matching and semantic vector " \
+                            "similarity, retrieving documents that match keywords while also considering their meaning via " \
+                            "embeddings, then computes a final relevance score using a custom scoring script.")
 async def hybrid_search_endpoint(query: str,
                                     semantic: Annotated[SemanticSearch, FromDishka()],
                                     other_versions: bool = False, 
@@ -75,10 +77,10 @@ async def hybrid_search_endpoint(query: str,
 
 
 
-@semantic_query_router.get("/knnMultiMatch",
+@semantic_query_router.get("/knn-fulltext",
                             response_model=List[SemanticSearchResponse],
-                            summary="Ricerca attraverso il metodo knn",
-                            description="integrata la funzinalita di ricerca tramite knn HSNW, un algoritmo che permette di fare la ricerca aproximate Knn ma introduce funzionalita di early stop per dare risultati velocemente e mantenendo comunque una buona precisione")
+                            summary="KNN search with HNSW",
+                            description="The endpoint uses HNSW approximate nearest neighbor search, traversing a hierarchical vector graph to efficiently find nearest neighbors while reducing unnecessary computations.")
 async def knn_multiMatch_endpoint(query: str,
                                     semantic: Annotated[SemanticSearch, FromDishka()],
                                     other_versions: bool = False, 

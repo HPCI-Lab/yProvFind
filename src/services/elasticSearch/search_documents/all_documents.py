@@ -55,11 +55,15 @@ class AllDocuments:
         if not response["hits"]["hits"]:
             return results
         
-        # Se dobbiamo includere tutte le versioni, raccogli i lineage trovati
         if include_all_versions:
-            lineages = [hit["_source"].get("lineage") for hit in response["hits"]["hits"] if hit["_source"].get("lineage")]
+            lineages = [
+                hit["_source"].get("lineage") 
+                for hit in response["hits"]["hits"] 
+                if hit["_source"].get("lineage") 
+                and not hit["_source"].get("lineage").startswith("standalone_")
+            ]
             logger.debug(f"Lineages found: {lineages}")
-            
+        
             if lineages:
                 # Seconda query: recupera TUTTE le versioni per i lineage trovati
                 versions_body = {

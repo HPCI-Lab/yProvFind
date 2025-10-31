@@ -2,6 +2,7 @@ import logging
 from services.elasticSearch.connection.es_connection import ElasticSearchConnection
 from dishka import Provider, provide, Scope
 from settings import settings
+from fastapi import HTTPException
 
 
 logger = logging.getLogger(__name__)
@@ -29,10 +30,5 @@ class CreateIndex():
             
         except Exception as e:
             logger.error(f"Error creating index {index_name}: {e}")
-            return {
-                "status": "error",
-                "index": index_name,
-                "error": str(e)
-            }
-
-
+            raise HTTPException(status_code=500, detail=f"Error during creation of the index {index_name}: {e}")
+        

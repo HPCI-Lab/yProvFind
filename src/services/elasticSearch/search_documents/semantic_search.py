@@ -23,7 +23,7 @@ class SemanticSearch():
         add_filters: Dict,
         include_all_versions: bool = True,
         size: int = 10, 
-        min_score: float = 0.7,
+        min_score: float = 0.01,
         timeout: float = 10.0
     ) -> List[Dict[str, Any]]:
         
@@ -42,7 +42,7 @@ class SemanticSearch():
                     "script_score": {
                         "query": {"bool": bool_query},
                         "script": {
-                            "source": "cosineSimilarity(params.query_vector, 'semantic_embedding') + 1.0",
+                            "source": "(cosineSimilarity(params.query_vector, 'semantic_embedding') + 1.0) / 2.0",
                             "params": {"query_vector": query_embedding}
                         }
                     }
@@ -79,9 +79,9 @@ class SemanticSearch():
         query: str,
         addFilters: Dict,
         include_all_versions: bool,
-        size: int = 10,
-        text_boost: float = 1.0,
-        semantic_boost: float = 1.0,
+        size: int = 15,
+        text_boost: float = 0.5,
+        semantic_boost: float = 2.0,
         timeout: float= 10
         
     ) -> List[Dict[str, Any]]:
@@ -91,37 +91,60 @@ class SemanticSearch():
         """
         async def _perform_search():
             query_embedding = await self.embedder._get_query_embedding(query)
-
-            bool_query = {
-                "must": {
-                    "multi_match": {
-                        "query": query,
-                        "fields": ["title^2", "description", "keywords", "author"]
+            
+            # Costruisci le clausole should
+            search_clauses = [
+                # Clausola 1: Full-text (contribuisce allo score)
+                {
+                    "bool": {
+                        "should": [
+                            {
+                                "multi_match": {
+                                    "query": query,
+                                    "fields": ["title^3", "description", "keywords^2", "author", "pid"],
+                                    "type": "best_fields",
+                                    "boost": text_boost   # enfatizza full-text
+                                }
+                            },
+                            {
+                                "multi_match": {
+                                    "query": query,
+                                    "fields": ["title.ngram^2", "keywords.ngram^1"],
+                                    "type": "best_fields",
+                                    "boost": text_boost * 2
+                                }
+                            }
+                        ]
                     }
+                },
+                # Clausola 2: Semantica (contribuisce allo score)
+                {
+                    "script_score": {
+                        "query": {"match_all": {}},
+                        "script": {
+                            "source": "(cosineSimilarity(params.query_vector, 'semantic_embedding') + 1.0) / 2.0",
+                            "params": {"query_vector": query_embedding}
+                        },
+                        "boost": semantic_boost
+                    }
+                }
+            ]
+            
+            # Query principale con should
+            query_body = {
+                "bool": {
+                    "should": search_clauses
+                    # NESSUN minimum_should_match
                 }
             }
             
+            # Aggiungi filtri
             if addFilters:
-                bool_query["filter"] = await self._add_filters(addFilters)
+                query_body["bool"]["filter"] = await self._add_filters(addFilters)
             
             search_body = {
-                "size": size,
-                "query": {
-                    "script_score": {
-                        "query": {"bool": bool_query},
-                        "script": {
-                            "source": (
-                                "cosineSimilarity(params.query_vector, 'semantic_embedding') * params.semantic_boost "
-                                "+ _score * params.text_boost"
-                            ),
-                            "params": {
-                                "query_vector": query_embedding,
-                                "text_boost": text_boost,
-                                "semantic_boost": semantic_boost
-                            }
-                        }
-                    }
-                },
+                "size": size * 2,
+                "query": query_body,
                 "collapse": {
                     "field": "lineage"
                 },
@@ -129,6 +152,7 @@ class SemanticSearch():
                     "excludes": ["semantic_embedding"]
                 }
             }
+            
 
             response = await self.es_conn.client.search(
                 index=settings.INDEX_NAME,
@@ -174,13 +198,26 @@ class SemanticSearch():
 
             # Costruisci la bool query per il filtro testuale
             bool_query = {
-                "must": {
-                    "multi_match": {
-                        "query": query,
-                        "fields": ["title^2", "description", "keywords", "author"]
-                    }
+                    "should": [  
+                        {
+                            # Match esatto (alta priorità)
+                            "multi_match": {
+                                "query": query,
+                                "fields": ["title^3", "description", "keywords^2", "author", "pid"],
+                                "type": "best_fields"
+                            }
+                        },
+                        {
+                            # Match parziale su ngram (bassa priorità)
+                            "multi_match": {
+                                "query": query,
+                                "fields": ["title.ngram^1", "keywords.ngram^0.5"],
+                                "type": "best_fields"
+                            }
+                        }
+                    ],
+                    "minimum_should_match": 1  # almeno una clausola deve matchare
                 }
-            }
 
             # Aggiungi filtri se presenti
             if addFilters:
@@ -220,10 +257,16 @@ class SemanticSearch():
         if not response["hits"]["hits"]:
             return results
         
-        # Se dobbiamo includere tutte le versioni, raccogli i lineage trovati
+
         if include_all_versions:
-            lineages = [hit["_source"].get("lineage") for hit in response["hits"]["hits"] if hit["_source"].get("lineage")]
+            lineages = [
+                hit["_source"].get("lineage") 
+                for hit in response["hits"]["hits"] 
+                if hit["_source"].get("lineage") 
+                and not hit["_source"].get("lineage").startswith("standalone_")
+            ]
             logger.debug(f"Lineages found: {lineages}")
+
             
             if lineages:
                 # Seconda query recupera TUTTE le versioni per i lineage trovati

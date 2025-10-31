@@ -10,7 +10,7 @@ from datetime import date
 
 get_all_router= APIRouter(route_class=DishkaRoute,
                           prefix="/search",
-                          tags=["search"],
+                          tags=["Search"],
                           )
 
 @get_all_router.get("/all",

@@ -26,9 +26,9 @@ def create_lifespan(container):
             try:
                 SFEI_controller = await request_container.get(SFEIController)
                 await SFEI_controller.SFEI_init()
-                logger.info("SFEI_init completata con successo")
+                logger.info("SFEI process successfully completed")
             except Exception as e:
-                logger.exception(f"Errore in SFEI_init: {e}")
+                logger.exception(f"An error occurred during the SFEI process: {e}")
     
     async def _starter():
         """Esegue setup iniziale completo (solo all'avvio)"""
@@ -37,14 +37,14 @@ def create_lifespan(container):
                 await request_container.get(ElasticSearchConnection)
                 SFEI_controller = await request_container.get(SFEIController)
                 await SFEI_controller.SFEI_init()
-                logger.info("Starter completato con successo")
+                logger.info("Starter successfully completed ")
             except Exception as e:
                 logger.exception(f"Errore nello starter: {e}")
     
     @asynccontextmanager
     async def lifespan(app: FastAPI):
         # Startup
-        logger.info("Avvio applicazione - esecuzione completa starter in background")
+        logger.info("Application launch - full startup in background")
         
         # Esegui starter completo solo all'avvio (con ElasticSearch check)
         asyncio.create_task(_starter())
@@ -60,12 +60,12 @@ def create_lifespan(container):
         )
         
         scheduler.start()
-        logger.info(f"Applicazione pronta - SFEI_init schedulata ogni {settings.SCHEDULER_INTERVAL_HOURS} ore")
+        logger.info(f"Application ready - SFEI_init scheduled every {settings.SCHEDULER_INTERVAL_HOURS} hours")
         
         yield
         
         # Shutdown
-        logger.info("Shutdown applicazione - fermo scheduler")
+        logger.info("Application Shutdown - scheduler shutdown")
         scheduler.shutdown(wait=True)
     
     return lifespan
@@ -76,7 +76,7 @@ def get_app():
     
     app = FastAPI(
         title="yProvFind",
-        description="Federated Index and Discovery - Servizio di ricerca provenance di yProv",
+        description="Federated Index and Discovery - yProv Provenance Lookup Service",
         version="1.0.0",
         lifespan=create_lifespan(container)
     )

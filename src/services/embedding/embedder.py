@@ -10,11 +10,12 @@ logger = logging.getLogger(__name__)
 
 class EmbeddingService:
     def __init__(self, model_name: str = "all-MiniLM-L6-v2"):
+        #non serve specificare il percorso, hugging face ricerca automaticamente tra le cartelle del progetto modelCache/all-MiniLM-L6-v2
         self.model = SentenceTransformer(model_name, local_files_only=settings.USE_LOCAL_EMBEDDER)
         if settings.USE_LOCAL_EMBEDDER:
-            logger.debug("The embedding model is loaded from the local cache")
+            logger.info("The embedding model is loaded from the local cache")
         else:
-            logger.warning("The embedding model is checking for updates on internet, to disable set USE_LOCAL_EMBEDDER to True")
+            logger.info("The embedding model is checking for updates on internet, to disable download the model in the src/modelCache folder and set USE_LOCAL_EMBEDDER to True ")
     
     async def add_embeddings_to_batch(self, documents: List[Dict]) -> Tuple[List[Dict], List[Dict]]:
         """

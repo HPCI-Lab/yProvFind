@@ -12,7 +12,7 @@ logger = logging.getLogger(__name__)
 
 
 
-class Multi_match_search:
+class FullTextSearch:
     def __init__(self, es_conn: ElasticSearchConnection):
         self.es_conn=es_conn
 
@@ -21,16 +21,27 @@ class Multi_match_search:
         filters=[]
 
         async def _perform_search():
-            logger.debug(f"eseguo la ricerca su elastic search ancora non ce timeout avvio perform search")
-
             bool_query = {
-                "must":{
-                    "multi_match": {
-                            "query": query,
-                            "fields": ["title", "description", "keywords", "author"]
+                    "should": [  
+                        {
+                            # Match esatto (alta priorità)
+                            "multi_match": {
+                                "query": query,
+                                "fields": ["title^3", "description", "keywords^2", "author", "pid"],
+                                "type": "best_fields"
+                            }
+                        },
+                        {
+                            # Match parziale su ngram (bassa priorità)
+                            "multi_match": {
+                                "query": query,
+                                "fields": ["title.ngram^1", "keywords.ngram^0.5"],
+                                "type": "best_fields"
+                            }
                         }
+                    ],
+                    "minimum_should_match": 1  # almeno una clausola deve matchare
                 }
-            }
 
             # Aggiungi filtri se presenti
             if addFilters:
@@ -38,6 +49,7 @@ class Multi_match_search:
 
 
             body = {
+                #"explain": True,
                 "query": {
                     "bool": bool_query
                 },
@@ -53,14 +65,13 @@ class Multi_match_search:
                 },
                 "size": 10
             }        
-            logger.debug(f"eseguo la ricerca su elastic search ancora non ce timeout")
-
+            
             response = await self.es_conn.client.search(
                 index=settings.INDEX_NAME,
                 body=body
             )
             
-            # Se dobbiamo includere tutte le versioni, raccogli i lineage trovati
+            # raccogli i lineage trovati
             
                
             return await self._add_versions(response, include_all_versions)
@@ -79,9 +90,16 @@ class Multi_match_search:
         if not response["hits"]["hits"]:
             return results
         
+        
+        
         # Se dobbiamo includere tutte le versioni, raccogli i lineage trovati
         if include_all_versions:
-            lineages = [hit["_source"].get("lineage") for hit in response["hits"]["hits"] if hit["_source"].get("lineage")]
+            lineages = [
+                hit["_source"].get("lineage") 
+                for hit in response["hits"]["hits"] 
+                if hit["_source"].get("lineage") 
+                and not hit["_source"].get("lineage").startswith("standalone_")
+            ]
             logger.debug(f"Lineages found: {lineages}")
             
             if lineages:
@@ -161,6 +179,7 @@ class Multi_match_search:
                     "id": hit["_id"],
                     "score": hit["_score"],
                     "source": hit["_source"],
+                    #"explanation": hit["_explanation"],
                     "other_versions": None
                 }
                 results.append(result)

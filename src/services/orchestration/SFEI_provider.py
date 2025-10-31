@@ -18,10 +18,11 @@ class SFEIProvider (Provider):
                             indexer: "IndexService",
                             scraper: "RegistryService",
                             timestamp: "TimestampManager",
-                            v1_lineage_updater: "LineageUpdateV1",
+                            #v1_lineage_updater: "LineageUpdateV1",
                             STACManager: "STACManager"
                             )->SFEIController:
-        return SFEIController(es_conn, embedder, fetcher, indexer, scraper, timestamp, v1_lineage_updater, STACManager)
+        #return SFEIController(es_conn, embedder, fetcher, indexer, scraper, timestamp, v1_lineage_updater, STACManager)
+        return SFEIController(es_conn, embedder, fetcher, indexer, scraper, timestamp,STACManager)
 
 
 

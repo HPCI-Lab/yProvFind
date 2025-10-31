@@ -11,7 +11,7 @@ class Settings(BaseSettings):
     BATCH_SIZE: int = 5
 
 
-    USE_LOCAL_EMBEDDER:bool= True
+    USE_LOCAL_EMBEDDER:bool= False
 
     SCHEDULER_INTERVAL_HOURS: int = 4 
 

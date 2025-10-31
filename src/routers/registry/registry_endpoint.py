@@ -47,29 +47,29 @@ class RegistryUpdateResponse(BaseModel):
     total_addresses: int
 
 
-@registry_router.post("/update-list", response_model=RegistryUpdateResponse)
+@registry_router.post("/update-list", description="Allows you to add the address of a yProvStore instance. New instances will be contacted with the next fetch.", response_model=RegistryUpdateResponse)
 async def add_address_endpoint(address_input: AddressInput, registry: Annotated[RegistryService, FromDishka()]):
     result = registry.update_address_list(str(address_input.address))
     return result
 
 
 
-@registry_router.get("/get-address-list", description="returns the list of all addresses saved in memory, both active and inactive")
+@registry_router.get("/get-address-list", description="Returns the list of all addresses saved in memory, both active and inactive")
 def get_all_addresses_list(registry: Annotated[RegistryService, FromDishka()]):
     return registry.get_all_list()
 
 
-@registry_router.get("/get-active-addresses", description="returns the list of active addresses")
+@registry_router.get("/get-active-addresses", description="Returns the list of active addresses")
 def get_active_addresses_list(registry: Annotated[RegistryService, FromDishka()]):
     return registry.get_active_list()
 
 
-@registry_router.get("/update-active-addresses", description="update and returns the list of active addresses")
-def update_addresses_list(registry: Annotated[RegistryService, FromDishka()]):
-    registry.update_active_list()
-    return registry.get_active_list()
+@registry_router.get("/get-update-active-addresses", description="Checks for active addresses, updates the list of active addresses, returns the updated list")
+async def update_addresses_list(registry: Annotated[RegistryService, FromDishka()]):
+    return await registry.update_active_list()
+    
 
 
-@registry_router.delete("/delete-address")
+@registry_router.delete("/delete-address", description="Remove an address from the list. Its timestamp is not removed. To remove also the timestamp, use /timestamp/delete-address-timestamp endpoint. ")
 def delete_address(address: str, registry: Annotated[RegistryService, FromDishka()]):
     return registry.delete_address(address)

@@ -34,13 +34,14 @@ class ScraperService:
             documents_page = await self._fetch_page(base_url, page, page_size, last_fetch)
             
             if not documents_page:
-                logger.info(f"Nessun documento trovato per {base_url}, terminazione fetch.")
+                logger.info(f"No documet found in {base_url}, scraper stop.")
                 break
                 
-            complete_doc_list, v2_list= await self.complete_document(documents_page, base_url)
+            #complete_doc_list, v2_list= await self.complete_document(documents_page, base_url)
+            complete_doc_list= await self.complete_document(documents_page, base_url)
             # con yield appena arriva la prima pagina gia si puo iniziare a processare i documenti, mentre se fosse stata implementata 
             # una lista che accumulava avremmo dovuto attendere il caricamento di tutte le pagine prima
-            yield complete_doc_list, v2_list
+            yield complete_doc_list#, v2_list
 
             page += 1
             if len(documents_page) < page_size:
@@ -91,10 +92,16 @@ class ScraperService:
                     logger.warning(f"Metadata failed for {doc.get('pid')}: {metadata}")
                     metadata = {"title": "", "description": "", "keywords": "", "author":""}  # metadata vuoti
                 
+                """
                 #creazione lista per aggiornare la lineage delle versioni 1 con l'indicizzazione della versione 2
                 if doc["version"]==2 and doc.get("parent_document_pid"):
                     v1_list[doc["parent_document_pid"]]= doc["lineage_id"]
-                
+                """
+                if  doc.get("lineage_id") is None or doc.get("lineage_id") == "":
+                    lineage_value= f"standalone_{doc["pid"]}"
+                else:
+                    lineage_value=  doc.get("lineage_id") 
+
                 complete_doc = {
                     "_index": settings.INDEX_NAME,
                     "_id": doc["pid"],
@@ -104,7 +111,7 @@ class ScraperService:
                         "owner_email": doc["owner_email"],
                         "storage_url": doc["storage_url"],
                         "parent_document_pid": doc["parent_document_pid"],
-                        "lineage": doc.get("lineage_id", None),
+                        "lineage":lineage_value,
                         "title": metadata.get("title", ""),
                         "description": metadata.get("description", ""),
                         "keywords": metadata.get("keywords", ""),
@@ -118,7 +125,7 @@ class ScraperService:
 
                 results.append(complete_doc)
             
-            return results, v1_list
+            return results#, v1_list
             
         except Exception as e:
             logger.error(f"Critical error in complete_document for {base_url}: {e}")
@@ -147,7 +154,7 @@ class ScraperService:
                 logger.warning(f"Timeout {url}")
                 return {}
             except Exception as e:
-                logger.error(f"errore nel recuperare i metadati: {e}")
+                logger.error(f"scraper error during the retrive of metadata: {e}")
                 return{}
 
 

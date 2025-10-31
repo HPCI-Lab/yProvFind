@@ -15,20 +15,20 @@ logger=logging.getLogger(__name__)
 
 delete_router = APIRouter(route_class=DishkaRoute,
                          prefix="/delete",
-                         tags=["delete"])
+                         tags=["Delete"])
 
 
 
 class DeleteAllDocsResponse(BaseModel):
-    status: str = Field(..., description="Stato finale dell'operazione", example="success")
-    index: str = Field(..., description="Nome dell'indice su cui è stata effettuata l'operazione")
-    total: Optional[int] = Field(None, description="Numero totale di documenti nell'indice prima della cancellazione")
-    deleted: Optional[int] = Field(None, description="Numero di documenti effettivamente eliminati")
-    failures: Optional[List[Any]] = Field(None, description="Eventuali errori riscontrati durante la cancellazione")
+    status: str = Field(..., description="operation result", example="success")
+    index: str = Field(..., description="Index name")
+    total: Optional[int] = Field(None, description="Documents number on the index before the elimination")
+    deleted: Optional[int] = Field(None, description="Elinated documents")
+    failures: Optional[List[Any]] = Field(None, description="Errors during the process")
 
-@delete_router.delete("/allDocInIndex",
-                      summary="eliminazione tutti file di un indice",
-                      description="L'endpoint offre un metodo per eliminare tutti i file indicizzati nell'indice designato senza eliminare l'indice stesso. Permette di mantenere quindi la mappatura dell'indice esistete",
+@delete_router.delete("/all-doc-in-index",
+                      summary="Delete all files in an index",
+                      description="The endpoint provides a method to delete all indexed files in the designated index without deleting the index itself. This allows you to preserve the existing index mapping.",
                       response_model= DeleteAllDocsResponse
                       )
 async def delete_all_doc_index(index_name: Annotated[str, Query(example="documents")], delete_service: Annotated[DeleteDocuments, FromDishka()] )-> DeleteAllDocsResponse:

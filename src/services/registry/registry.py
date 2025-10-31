@@ -26,8 +26,8 @@ class RegistryService():
         self.complete_path = self.data_dir / self.name_file
         self.all_list= self._list_load()
 
-        #logger.info(f"📁 Path assoluto file registry: {self.complete_path.resolve()}")
-        #logger.info(f"📂 Directory corrente: {Path.cwd()}")
+        #logger.info(f"Path assoluto file registry: {self.complete_path.resolve()}")
+        #logger.info(f"Directory corrente: {Path.cwd()}")
 
         
 
@@ -36,20 +36,20 @@ class RegistryService():
             await self.check_avaibility()
             return self.active_list
         except Exception as e: 
-            raise HTTPException(status_code=500, detail=f"Errore interno: {str(e)}")
+            raise HTTPException(status_code=500, detail=f"Registri internal error: {str(e)}")
     
 
     def get_active_list(self)->List[str]:
         try:
             return self.active_list
         except Exception as e: 
-            raise HTTPException(status_code=500, detail=f"Errore interno: {str(e)}")
+            raise HTTPException(status_code=500, detail=f"Registri internal error: {str(e)}")
     
     def get_all_list(self)->List[str]:
         try:
             return self.all_list
         except Exception as e: 
-            raise HTTPException(status_code=500, detail=f"Errore interno: {str(e)}")
+            raise HTTPException(status_code=500, detail=f"Registri internal error: {str(e)}")
         
 
 
@@ -65,11 +65,11 @@ class RegistryService():
             #logger.debug(f"TIPO active_list: {type(self.active_list)} - VALORE: {self.active_list}")
             if result is True:  # Servizio attivo
                 self.active_list.append(address)
-                logger.notice(f"Scraper: Server address -> {address} -> ACTIVE")
+                logger.notice(f"Registry: Server address -> {address} -> ACTIVE")
             elif isinstance(result, Exception):
-                logger.warning(f"Scraper: Server address -> {address} -> ERROR: {result}")
+                logger.warning(f"Registry: Server address -> {address} -> ERROR: {result}")
             else:
-                logger.warning(f"Scraper: Server address -> {address} -> NOT RESPONDING")
+                logger.warning(f"Registry: Server address -> {address} -> NOT RESPONDING")
         
 
 
@@ -111,7 +111,7 @@ class RegistryService():
                 self.all_list.append(normalized_address)
                 self._save_addresses()
                 
-                logger.info(f"Aggiunto nuovo indirizzo: {normalized_address}")
+                logger.info(f"New address added: {normalized_address}")
                 
 
                 return {
@@ -120,7 +120,7 @@ class RegistryService():
                     "total_addresses": len(self.all_list)
                 }
             else:
-                logger.info(f"Indirizzo già presente: {normalized_address}")
+                logger.info(f"Address already present: {normalized_address}")
                 return {
                     "status": "already_present",
                     "address": normalized_address,
@@ -129,8 +129,8 @@ class RegistryService():
         except HTTPException:
             raise
         except Exception as e:
-            logger.error(f"Errore durante l'aggiornamento: {str(e)}")
-            raise HTTPException(status_code=500, detail=f"Errore interno: {str(e)}")
+            logger.error(f"Registry error during the update of the addresses list: {str(e)}")
+            raise HTTPException(status_code=500, detail=f"Registri internal error: {str(e)}")
         
 
     def _list_load(self)-> List[str]:
@@ -138,17 +138,17 @@ class RegistryService():
             if self.complete_path.exists():
                 with open(self.complete_path, 'r', encoding='utf-8') as f:
                     data = json.load(f)
-                    logger.info(f"loaded {len(data)} addresses from memory")
+                    logger.info(f"Loaded {len(data)} addresses from memory")
                     return data
             else:
-                logger.info("Adresses file not found")
+                logger.info("Registry: Adresses file not found")
                 self._save_addresses([])  # Crea file vuoto
                 return []
         except json.JSONDecodeError as e:
             logger.error(f"Parsing error of registry file: {e}")
             return []
         except Exception as e:
-            logger.error(f"Error during the load of addresses file: {e}")
+            logger.error(f"Registry error during the load of addresses file: {e}")
             return []
 
 
@@ -170,10 +170,10 @@ class RegistryService():
             # Rename atomico (su Linux/Unix è atomico)
             temp_file.replace(self.complete_path)
             
-            logger.info(f"Salvate {len(addresses)} addresses sul file {self.complete_path}")
+            logger.info(f"Saved {len(addresses)} addresses on {self.complete_path}")
             
         except Exception as e:
-            logger.error(f"Errore nel salvataggio addresses: {e}")
+            logger.error(f"Registry error while saving address list: {e}")
             raise
 
 
@@ -223,8 +223,8 @@ class RegistryService():
             # Rilancia le HTTPException così come sono
             raise
         except Exception as e:
-            logger.error(f"Error during deletion: {str(e)}")
-            raise HTTPException(status_code=500, detail=f"Internal error: {str(e)}")
+            logger.error(f"Error while deletion: {str(e)}")
+            raise HTTPException(status_code=500, detail=f"Registri internal error: {str(e)}")
 
 
 
