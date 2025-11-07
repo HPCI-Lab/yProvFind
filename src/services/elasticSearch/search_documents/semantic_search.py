@@ -372,37 +372,32 @@ class SemanticSearch():
     async def _add_versions(self, response: Dict[str, Any], include_all_versions: bool) -> List[Dict[str, Any]]:
         results = []
         
-        # Se non ci sono hit, ritorna lista vuota
         if not response["hits"]["hits"]:
             return results
         
-
         if include_all_versions:
+            # Raccogli SOLO i lineage veri (non standalone)
             lineages = [
                 hit["_source"].get("lineage") 
                 for hit in response["hits"]["hits"] 
                 if hit["_source"].get("lineage") 
                 and not hit["_source"].get("lineage").startswith("standalone_")
             ]
-            logger.debug(f"Lineages found: {lineages}")
-
             
+            versions_by_lineage = {}
+            
+            # Se ci sono lineage veri, recupera le versioni
             if lineages:
-                # Seconda query recupera TUTTE le versioni per i lineage trovati
+                logger.debug(f"Lineages found: {lineages}")
+                
                 versions_body = {
-                    "query": {
-                        "terms": {
-                            "lineage": lineages
-                        }
-                    },
+                    "query": {"terms": {"lineage": lineages}},
                     "sort": [
                         {"lineage": {"order": "asc"}},
                         {"version": {"order": "desc"}}
                     ],
-                    "_source": {
-                        "excludes": ["semantic_embedding"]
-                    },
-                    "size": 1000  # Assicurati di prendere tutte le versioni
+                    "_source": {"excludes": ["semantic_embedding"]},
+                    "size": 1000
                 }
                 
                 versions_response = await self.es_conn.client.search(
@@ -410,8 +405,7 @@ class SemanticSearch():
                     body=versions_body
                 )
                 
-                # Organizza le versioni per lineage
-                versions_by_lineage = {}
+                # Organizza versioni per lineage
                 for hit in versions_response["hits"]["hits"]:
                     lineage = hit["_source"].get("lineage")
                     if lineage:
@@ -423,54 +417,60 @@ class SemanticSearch():
                             "source": hit["_source"],
                             "version": hit["_source"].get("version")
                         })
+            
+            # Processa TUTTI i documenti nell'ORDINE ORIGINALE (già ordinato per score)
+            for hit in response["hits"]["hits"]:
+                lineage = hit["_source"].get("lineage")
                 
-                # Costruisci i risultati con tutte le versioni
-                for hit in response["hits"]["hits"]:
-                    lineage = hit["_source"].get("lineage")
+                result = {
+                    "id": hit["_id"],
+                    "score": hit["_score"],
+                    "source": hit["_source"]
+                }
+                
+                # Caso 1: Documento standalone
+                if not lineage or lineage.startswith("standalone_"):
+                    result["other_versions"] = []
+                    logger.debug(f"Standalone document {hit['_id']} with score {hit['_score']}")
+                
+                # Caso 2: Documento con lineage e versioni trovate
+                elif lineage in versions_by_lineage:
+                    all_versions = versions_by_lineage[lineage]
+                    result["other_versions"] = [
+                        {
+                            "id": v["id"],
+                            "score": v["score"],
+                            "source": v["source"]
+                        }
+                        for v in all_versions
+                        if v["id"] != hit["_id"]
+                    ]
                     
-                    result = {
-                        "id": hit["_id"],
-                        "score": hit["_score"],
-                        "source": hit["_source"]
-                    }
-                    
-                    if lineage and lineage in versions_by_lineage:
-                        # Filtra escludendo il documento principale
-                        all_versions = versions_by_lineage[lineage]
-                        result["other_versions"] = [
-                            {
-                                "id": v["id"],
-                                "score": v["score"],
-                                "source": v["source"]
-                            }
-                            for v in all_versions
-                            if v["id"] != hit["_id"]
-                        ]
-
-                        """"
-                        # Log per debugging
-                        logger.debug(f"Document {hit['_id']} (v{hit['_source'].get('version')}) has {len(result['other_versions'])} other versions")
-                        versions_list = [v['source'].get('version') for v in result['other_versions']]
-                        logger.debug(f"Other versions: {versions_list}")
-                        """
-                        
-                    else:
-                        result["other_versions"] = []
-                    
-                    results.append(result)
+                    logger.debug(f"Document {hit['_id']} (v{hit['_source'].get('version')}) with score {hit['_score']} has {len(result['other_versions'])} other versions")
+                    versions_list = [v['source'].get('version') for v in result['other_versions']]
+                    logger.debug(f"Other versions: {versions_list}")
+                
+                # Caso 3: Documento con lineage ma nessuna versione trovata (edge case)
+                else:
+                    result["other_versions"] = []
+                    logger.debug(f"Document {hit['_id']} with lineage but no versions found")
+                
+                # Aggiungi nell'ordine originale (che è già ordinato per score!)
+                results.append(result)
+        
         else:
-            # Se non includiamo tutte le versioni, ritorna solo i risultati principali
+            # Non includere versioni
             for hit in response["hits"]["hits"]:
                 result = {
                     "id": hit["_id"],
                     "score": hit["_score"],
                     "source": hit["_source"],
-                    "other_versions": []
+                    "other_versions": None
                 }
                 results.append(result)
         
-        return results            
-            
+        return results
+
 
     async def _add_filters(self, filters:Dict): 
         _filters=[]
