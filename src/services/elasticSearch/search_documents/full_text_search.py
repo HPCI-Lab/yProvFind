@@ -23,12 +23,21 @@ class FullTextSearch:
         async def _perform_search():
             bool_query = {
                     "should": [  
+                        
+                        {
+                            # Match esatto su pid
+                            "multi_match": {
+                                "query": query,
+                                "fields": ["pid.keyword^5"],
+                                "type": "best_fields"
+                            }
+                        },
                         {
                             # Match esatto (alta priorità)
                             "multi_match": {
                                 "query": query,
                                 "fields": ["title^3", "description", "keywords^2", "author", "pid"],
-                                "type": "best_fields"
+                                "type": "cross_fields",
                             }
                         },
                         {

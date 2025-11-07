@@ -27,7 +27,7 @@ COPY ./src /app/src
 #COPY src/modelCache /root/.cache/huggingface/hub/
 
 # Espone la porta
-EXPOSE 8001
+EXPOSE 8002
 
 # Comando per avviare l'app
 CMD ["uv", "run", "src/main.py", "--host", "0.0.0.0", "--port", "8002"]

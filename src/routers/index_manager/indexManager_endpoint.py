@@ -4,6 +4,7 @@ from dishka.integrations.fastapi import DishkaRoute, FromDishka
 from services.elasticSearch.index_manager.create import CreateIndex
 from services.elasticSearch.index_manager.delete import DeleteIndex
 from pydantic import BaseModel, Field
+from services.orchestration.last_check_timestamp import TimestampManager
 
 index_manager_router = APIRouter( route_class=DishkaRoute,
                                  prefix = "",
@@ -129,8 +130,10 @@ class DeleteIndexResponse(BaseModel):
 
 @index_manager_router.delete("/delete-index",
                       summary="Complete elimination of the index",
-                      description="completely deletes the index passed as a parameter, including the files inside it and its mapping",
+                      description="Completely deletes the index passed as a parameter, including the files inside it and its mapping. If delete timestamp is true all the timestamp for each address is deleted",
                       response_model=DeleteIndexResponse
                       )
-async def delete_index(index_name:  Annotated[str, Query(example="documents")], delete_service: Annotated[DeleteIndex, FromDishka()])-> DeleteIndexResponse:
+async def delete_index(index_name:  Annotated[str, Query(example="documents")],  delete_service: Annotated[DeleteIndex, FromDishka()], timeStampManager: Annotated[TimestampManager, FromDishka()],delete_timestamp: bool = False)-> DeleteIndexResponse:
+    if delete_timestamp:
+        timeStampManager.delete_all_last_fetch()
     return await delete_service.delete_index(index_name)

@@ -66,13 +66,7 @@ class SemanticSearch():
 
 
 
-
-
-
-
-
-
-
+    """
 
     async def hybrid_search_native(
         self,
@@ -80,172 +74,297 @@ class SemanticSearch():
         addFilters: Dict,
         include_all_versions: bool,
         size: int = 15,
-        text_boost: float = 0.5,
-        semantic_boost: float = 2.0,
-        timeout: float= 10
-        
+        text_boost: float = 0.3,
+        semantic_boost: float = 1,
+        timeout: float = 10
     ) -> List[Dict[str, Any]]:
-        """
-        Ricerca ibrida usando le funzionalità native di Elasticsearch 8.0+
-        Utilizza il nuovo 'hybrid' retriever
-        """
+
         async def _perform_search():
             query_embedding = await self.embedder._get_query_embedding(query)
-            
-            # Costruisci le clausole should
+
+            # Clausole di ricerca (invariato)
             search_clauses = [
-                # Clausola 1: Full-text (contribuisce allo score)
                 {
                     "bool": {
                         "should": [
                             {
                                 "multi_match": {
                                     "query": query,
-                                    "fields": ["title^3", "description", "keywords^2", "author", "pid"],
-                                    "type": "best_fields",
-                                    "boost": text_boost   # enfatizza full-text
+                                    "fields": ["pid.keyword^3"],
+                                    "type": "best_fields"
                                 }
                             },
                             {
                                 "multi_match": {
                                     "query": query,
-                                    "fields": ["title.ngram^2", "keywords.ngram^1"],
+                                    "fields": [
+                                        "title^2", "description", "keywords^1", "author", "pid"
+                                    ],
+                                    "type": "cross_fields",
+                                }
+                            },
+                            {
+                                "multi_match": {
+                                    "query": query,
+                                    "fields": ["title.ngram^1", "keywords.ngram^1"],
                                     "type": "best_fields",
-                                    "boost": text_boost * 2
                                 }
                             }
                         ]
                     }
                 },
-                # Clausola 2: Semantica (contribuisce allo score)
                 {
                     "script_score": {
                         "query": {"match_all": {}},
                         "script": {
-                            "source": "(cosineSimilarity(params.query_vector, 'semantic_embedding') + 1.0) / 2.0",
-                            "params": {"query_vector": query_embedding}
+                            "source": 
+
+
+
+                                // Score semantico già normalizzato in [0,1]
+                                double semantic = (cosineSimilarity(params.query_vector, 'semantic_embedding') + 1.0);
+
+                                // Combinazione pesata
+                                double final_score = (semantic * params.semantic_weight);
+
+                                return final_score;
+                            ,
+                            "params": {
+                                "query_vector": query_embedding,
+                              
+                                "semantic_weight": semantic_boost
+                            }
                         },
-                        "boost": semantic_boost
+                        
                     }
                 }
             ]
-            
-            # Query principale con should
-            query_body = {
-                "bool": {
-                    "should": search_clauses
-                    # NESSUN minimum_should_match
-                }
-            }
-            
-            # Aggiungi filtri
+
+            query_body = {"bool": {"should": search_clauses}}
+
             if addFilters:
                 query_body["bool"]["filter"] = await self._add_filters(addFilters)
-            
+
             search_body = {
-                "size": size * 2,
+                "size": size,
                 "query": query_body,
-                "collapse": {
-                    "field": "lineage"
-                },
-                "_source": {
-                    "excludes": ["semantic_embedding"]
-                }
+                "collapse": {"field": "lineage"},
+                "_source": {"excludes": ["semantic_embedding"]}
             }
-            
 
             response = await self.es_conn.client.search(
                 index=settings.INDEX_NAME,
                 body=search_body
             )
-            
+
             return await self._add_versions(response, include_all_versions)
-        
 
         return await safe_es_call(_perform_search(), "search", timeout=timeout)
-        
+    """
 
 
 
-
-
-
-    async def knn_MultiMatch_search (
+ 
+    async def hybrid_search_native(
         self,
         query: str,
         addFilters: Dict,
         include_all_versions: bool,
-        size: int = 10,
-        num_results: int = 5,
-        num_candidate: int = 10,
-        timeout: float = 10.0
-            )->List[Dict[str, Any]]: 
-
-        """
-            integrata la funzinalita di ricerca tramite knn HSNW, un algoritmo che permette di fare la ricerca aproximate Knn ma introduce
-            funzionalita di early stop per dare risultati velocemente e mantenendo comunque una buona precisione
-        """
-
+        size: int = 15,
+        text_boost: float = 0.4,
+        semantic_boost: float = 0.6,
+        timeout: float = 10
+    ) -> List[Dict[str, Any]]:
+        
         async def _perform_search():
-            query_embedding= await self.embedder._get_query_embedding(query)
-
-            knn_query = {
-                "field": "semantic_embedding",
-                "query_vector": query_embedding,
-                "k": num_results,
-                "num_candidates": num_candidate
-            }
-
-            # Costruisci la bool query per il filtro testuale
-            bool_query = {
-                    "should": [  
-                        {
-                            # Match esatto (alta priorità)
-                            "multi_match": {
-                                "query": query,
-                                "fields": ["title^3", "description", "keywords^2", "author", "pid"],
-                                "type": "best_fields"
-                            }
-                        },
-                        {
-                            # Match parziale su ngram (bassa priorità)
-                            "multi_match": {
-                                "query": query,
-                                "fields": ["title.ngram^1", "keywords.ngram^0.5"],
-                                "type": "best_fields"
-                            }
+            query_embedding = await self.embedder._get_query_embedding(query)
+            
+            # UN'UNICA clausola script_score
+            search_clause = {
+                "script_score": {
+                    "query": {
+                        "bool": {
+                            "should": [
+                                {
+                                    "multi_match": {
+                                        "query": query,
+                                        "fields": ["pid.keyword^3"],
+                                        "type": "best_fields"
+                                    }
+                                },
+                                {
+                                    "multi_match": {
+                                        "query": query,
+                                        "fields": [
+                                            "title^2", "description", "keywords^1", "author", "pid"
+                                        ],
+                                        "type": "cross_fields",
+                                    }
+                                },
+                                {
+                                    "multi_match": {
+                                        "query": query,
+                                        "fields": ["title.ngram^1", "keywords.ngram^1"],
+                                        "type": "best_fields",
+                                    }
+                                }
+                            ],
+                            "minimum_should_match": 0  # ← IMPORTANTE: permette risultati anche se full-text = 0
                         }
-                    ],
-                    "minimum_should_match": 1  # almeno una clausola deve matchare
+                    },
+                    "script": {
+                        "source": """
+                            // _score contiene lo score full-text (può essere 0 se nessun match)
+                            double fulltext = _score;
+                            
+                            // Normalizzazione dello score full-text
+                            double normalized_ft = 0.0;
+                            if (fulltext > 0) {
+                                double ft_log = Math.log(1.0 + fulltext);
+                                normalized_ft = 1.0 / (1.0 + Math.exp(-1.5 * (ft_log - 1.5)));
+                            }
+                            
+                            // Score semantico normalizzato in [0,1]
+                            double semantic = (cosineSimilarity(params.query_vector, 'semantic_embedding') + 1.0) / 2.0;
+                            
+                            // Combinazione pesata
+                            double final_score = (normalized_ft * params.text_weight) + 
+                                                (semantic * params.semantic_weight);
+                            
+                            return final_score;
+                            """
+                        ,
+                        "params": {
+                            "query_vector": query_embedding,
+                            "text_weight": text_boost,
+                            "semantic_weight": semantic_boost
+                        }
+                    }
                 }
-
-            # Aggiungi filtri se presenti
+            }
+            
+            # Aggiungi i filtri se presenti
+            query_body = search_clause
             if addFilters:
-                filters = await self._add_filters(addFilters)
-                bool_query["filter"] = filters
-                knn_query["filter"] = filters  
-
-            search_body = {
-                "knn": knn_query,
-                "query": {"bool": bool_query},
-                "collapse": {
-                    "field": "lineage"
-                },
-                "_source": {
-                    "excludes": ["semantic_embedding"]
+                query_body = {
+                    "bool": {
+                        "must": [search_clause],
+                        "filter": await self._add_filters(addFilters)
+                    }
                 }
-            }          
-
+            
+            search_body = {
+                "size": size,
+                "query": query_body,
+                "collapse": {"field": "lineage"},
+                "_source": {"excludes": ["semantic_embedding"]}
+            }
+            
             response = await self.es_conn.client.search(
-                index= settings.INDEX_NAME,
+                index=settings.INDEX_NAME,
                 body=search_body
             )
-
             return await self._add_versions(response, include_all_versions)
         
         return await safe_es_call(_perform_search(), "search", timeout=timeout)
 
 
+    async def knn_MultiMatch_search (
+    self,
+    query: str,
+    addFilters: Dict,
+    include_all_versions: bool,
+    size: int = 15,
+    text_boost: float = 0.5,
+    semantic_boost: float = 0.5,
+    timeout: float = 10
+    ) -> List[Dict[str, Any]]:
+    
+        async def _perform_search():
+            query_embedding = await self.embedder._get_query_embedding(query)
+            
+            # Usa kNN per la ricerca semantica come query principale
+            search_body = {
+                "size": size,
+                "knn": {
+                    "field": "semantic_embedding",
+                    "query_vector": query_embedding,
+                    "k": size * 3,  # Prendi più candidati per poi riordinare
+                    "num_candidates": 100,
+                    "filter": await self._add_filters(addFilters) if addFilters else []
+                },
+                "query": {
+                    "script_score": {
+                        "query": {
+                            "bool": {
+                                "should": [
+                                    {
+                                        "multi_match": {
+                                            "query": query,
+                                            "fields": ["pid.keyword^3"],
+                                            "type": "best_fields"
+                                        }
+                                    },
+                                    {
+                                        "multi_match": {
+                                            "query": query,
+                                            "fields": [
+                                                "title^2", "description", "keywords^1", "author", "pid"
+                                            ],
+                                            "type": "cross_fields",
+                                        }
+                                    },
+                                    {
+                                        "multi_match": {
+                                            "query": query,
+                                            "fields": ["title.ngram^1", "keywords.ngram^1"],
+                                            "type": "best_fields",
+                                        }
+                                    }
+                                ],
+                                "minimum_should_match": 0 
+                            }
+                        },
+                        "script": {
+                            "source": """
+                                // Score semantico dal kNN (già in _score dal contesto kNN)
+                                double semantic = (cosineSimilarity(params.query_vector, 'semantic_embedding') + 1.0) / 2.0;
+                                
+                                // Score full-text dalla query (può essere 0)
+                                double fulltext = _score;
+                                
+                                // Normalizzazione dello score full-text
+                                double normalized_ft = 0.0;
+                                if (fulltext > 0) {
+                                    double ft_log = Math.log(1.0 + fulltext);
+                                    normalized_ft = 1.0 / (1.0 + Math.exp(-1.5 * (ft_log - 1.5)));
+                                }
+                                
+                                // Combinazione pesata
+                                double final_score = (semantic * params.semantic_weight) + 
+                                                    (normalized_ft * params.text_weight);
+                                
+                                return final_score;
+                            """,
+                            "params": {
+                                "query_vector": query_embedding,
+                                "text_weight": text_boost,
+                                "semantic_weight": semantic_boost
+                            }
+                        }
+                    }
+                },
+                "collapse": {"field": "lineage"},
+                "_source": {"excludes": ["semantic_embedding"]}
+            }
+            
+            response = await self.es_conn.client.search(
+                index=settings.INDEX_NAME,
+                body=search_body
+            )
+            return await self._add_versions(response, include_all_versions)
+        
+        return await safe_es_call(_perform_search(), "search", timeout=timeout)
 
 
 

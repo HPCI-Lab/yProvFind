@@ -6,3 +6,4 @@ src/modelCache/
 src/services/stac_catalog/STAC/
 STAC/
 registryList/
+src/yProvFind.egg-info

@@ -14,15 +14,15 @@ class SFEIProvider (Provider):
     async def SFEI_Provider(self,
                             es_conn: "ElasticSearchConnection",
                             embedder: "EmbeddingService",
-                            fetcher: "ScraperService",
+                            scraper: "ScraperService",
                             indexer: "IndexService",
-                            scraper: "RegistryService",
+                            registry: "RegistryService",
                             timestamp: "TimestampManager",
                             #v1_lineage_updater: "LineageUpdateV1",
                             STACManager: "STACManager"
                             )->SFEIController:
         #return SFEIController(es_conn, embedder, fetcher, indexer, scraper, timestamp, v1_lineage_updater, STACManager)
-        return SFEIController(es_conn, embedder, fetcher, indexer, scraper, timestamp,STACManager)
+        return SFEIController(es_conn, embedder, scraper, indexer, registry, timestamp,STACManager)
 
 
 
