@@ -16,7 +16,7 @@ class FullTextSearch:
     def __init__(self, es_conn: ElasticSearchConnection):
         self.es_conn=es_conn
 
-    async def search(self, query: str, addFilters: Dict, include_all_versions: bool = False, timeout: float = 10):
+    async def search(self, query: str, addFilters: Dict,  page_size:int=10, include_all_versions: bool = False, timeout: float = 10,):
         must=[]
         filters=[]
 
@@ -72,7 +72,7 @@ class FullTextSearch:
                 "_source": {
                     "excludes": ["semantic_embedding"]
                 },
-                "size": 10
+                "size": page_size 
             }        
             
             response = await self.es_conn.client.search(

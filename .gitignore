@@ -7,3 +7,5 @@ src/services/stac_catalog/STAC/
 STAC/
 registryList/
 src/yProvFind.egg-info
+src/cli/yprovfind_cli.egg-info
+src/orchestration/last_fetch.json

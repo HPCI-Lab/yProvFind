@@ -35,13 +35,15 @@ class FullTextResponse(BaseModel):
                     response_model=List[FullTextResponse]
                 )
 async def search(
-    query: str,
     full_text_search: Annotated[FullTextSearch, FromDishka()],
+    query: str = Query(None, description="es. climate"),
+    page_size : Optional[int] = Query(10, description="es. 10"),
     other_versions: bool = False,
-    date_from: Optional[date] = None,
-    date_to: Optional[date] = None,
-    version: Optional[int] = None,
-    yProvIstance: Optional[str] = None
+    date_from: Optional[date] = Query(None, description="format: yyyy-mm-dd"),
+    date_to: Optional[date] = Query(None, description="format: yyyy-mm-dd"),
+    version: Optional[int] =  Query(None, description="es. 3"),
+    yProvIstance: Optional[str] = Query(None, description="es. http://localhost:8000")
+
     
 ) -> List[FullTextResponse]:
     filters = {
@@ -50,4 +52,4 @@ async def search(
         "version": version,
         "yProvIstance": yProvIstance,
     }
-    return await full_text_search.search(query, filters, other_versions)
+    return await full_text_search.search(query, filters, page_size, other_versions)

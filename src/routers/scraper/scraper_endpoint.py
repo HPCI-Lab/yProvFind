@@ -36,7 +36,7 @@ async def fetch_all( SFEI_controller: Annotated[SFEIController, FromDishka()] ):
 
 
     except Exception as e: 
-        logger.error(f"Fetch failed: {e}")
+        logger.error(f"Scraper failed: {e}")
         raise HTTPException(
             status_code=500, 
             detail=f"Error during the fetch process: {e}"

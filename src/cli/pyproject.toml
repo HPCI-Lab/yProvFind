@@ -1,0 +1,18 @@
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "yprovfind-cli"
+version = "0.1.0"
+description = "CLI client for yProvFind service"
+requires-python = ">=3.9"
+dependencies = [
+    "click>=8.0",
+    "requests>=2.25",
+    "rich>=13.0",
+]
+
+[project.scripts]
+ypfind = "cli:cli"
+

@@ -61,7 +61,7 @@ class SFEIController ():
             logger.debug(f"found {len(yProvIstanceList)} istances")         
             if not yProvIstanceList:
                 logger.warning("No yProvStore instances found, process interrupted")
-                return{"status" : "interupted",
+                return{"status" : "interrupted",
                        "details" : "No yProvStore instances found, process interrupted",
                         "ES_successfully_indexed": 0,
                         "ES_error_count": 0,

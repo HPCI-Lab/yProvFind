@@ -133,6 +133,9 @@ class RegistryService():
             raise HTTPException(status_code=500, detail=f"Registri internal error: {str(e)}")
         
 
+
+
+
     def _list_load(self)-> List[str]:
         try:
             if self.complete_path.exists():

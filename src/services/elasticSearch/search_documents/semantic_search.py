@@ -52,7 +52,8 @@ class SemanticSearch():
                 },
                 "_source": {
                     "excludes": ["semantic_embedding"]
-                }
+                },
+                "size":size
             }
             
             response = await self.es_conn.client.search(
@@ -257,7 +258,8 @@ class SemanticSearch():
                 "size": size,
                 "query": query_body,
                 "collapse": {"field": "lineage"},
-                "_source": {"excludes": ["semantic_embedding"]}
+                "_source": {"excludes": ["semantic_embedding"]},
+                "size":size
             }
             
             response = await self.es_conn.client.search(
@@ -355,7 +357,8 @@ class SemanticSearch():
                     }
                 },
                 "collapse": {"field": "lineage"},
-                "_source": {"excludes": ["semantic_embedding"]}
+                "_source": {"excludes": ["semantic_embedding"]},
+                "size":size
             }
             
             response = await self.es_conn.client.search(

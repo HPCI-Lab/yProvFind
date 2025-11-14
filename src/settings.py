@@ -8,7 +8,7 @@ class Settings(BaseSettings):
     
 
     PAGE: int = 0
-    BATCH_SIZE: int = 5
+    BATCH_SIZE: int = 20
 
 
     USE_LOCAL_EMBEDDER:bool= False
