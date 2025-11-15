@@ -11,20 +11,21 @@ ENV PYTHONPATH=/app/src
 # Imposta la directory di lavoro
 WORKDIR /app
 
-# Copia file per installare le dipendenze
+# Copia file per installare le dipendenze del progetto principale
 COPY pyproject.toml uv.lock ./
 
-# Installa le dipendenze
+# Installa le dipendenze del progetto principale
 RUN uv sync --frozen --no-cache
 
 # Copia il codice sorgente
 COPY ./src /app/src
 
-# Copia la cache del modello Hugging Face
-# (questa cartella contiene i file già scaricati)
+# Installa la CLI come package
+WORKDIR /app/src/cli
+RUN uv pip install --system -e .
 
-#RUN mkdir -p /root/.cache/huggingface/hub
-#COPY src/modelCache /root/.cache/huggingface/hub/
+# Torna alla directory principale
+WORKDIR /app
 
 # Espone la porta
 EXPOSE 8002
