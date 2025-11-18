@@ -10,6 +10,7 @@ from .orchestration.last_check_timestamp import TimestamProvider
 from .elasticSearch.index_manager.index_manager_provider import IndexManagerProvider
 from .elasticSearch.update_documents.update_documents_provider import UpdateDocumentsProvider
 from .stac_catalog.STAC_provider import STACProvider
+from .demo.demo import DemoProvider
 
 __all__ = ("providers",)
 
@@ -26,5 +27,6 @@ providers =[ElasticSearchService,
             AllDocumentsProvider,
             IndexManagerProvider,
             UpdateDocumentsProvider,
-            STACProvider
+            STACProvider,
+            DemoProvider
             ]

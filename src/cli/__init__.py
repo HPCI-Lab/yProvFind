@@ -4,6 +4,7 @@ from cli.cli.commands.cli_indexing import start_index
 from cli.cli.commands.cli_registry import registry
 from cli.cli.commands.cli_search import search
 from cli.cli.commands.cli_timestamp import tmstamp
+from cli.cli.commands.cli_demo import demo
 @click.group()
 @click.option(
     "--url",
@@ -28,6 +29,7 @@ cli.add_command(start_index)
 cli.add_command(registry)
 cli.add_command(search)
 cli.add_command(tmstamp)
+cli.add_command(demo)
 
 
 if __name__ == "__main__":

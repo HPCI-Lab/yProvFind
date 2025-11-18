@@ -9,6 +9,7 @@ from ..utils.api_client import APIClient, APIError, APIHTTPError, APIConnectionE
 
 console = Console()
 
+
 @click.command(name="search")
 @click.argument("query")
 @click.option(
@@ -72,16 +73,16 @@ def search(
     Examples:
     
         Full-text search:
-        ypfind search climate --ftx
+        ypfind search climate --type ftx
 
         Semantic search:
-        ypfind search climate --smt
+        ypfind search climate --type smt
 
         Hybrid search:
-        ypfind search climate --hyb
+        ypfind search climate --type hyb
 
         Knn search:
-        ypfind search climate --knn
+        ypfind search climate --type knn
 
         Search with date range
         ypfind search "climate change" --date-from 01-01-2024 --date-to 31-12-2024
