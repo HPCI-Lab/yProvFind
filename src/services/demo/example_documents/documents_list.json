@@ -1,0 +1,169 @@
+[
+    {
+    "_index": "documents",
+    "_id": "21.T11961/f1ec6ed4-9491-4512-9ab8-6678c11db239",
+    "_source": {
+            "pid": "21.T11961/f1ec6ed4-9491-4512-9ab8-6678c11db239",
+            "version": 1,
+            "owner_email": "user@example.com",
+            "storage_url": "http://127.0.0.1:8000/documents/21.T11961/f1ec6ed4-9491-4512-9ab8-6678c11db239/download",
+            "parent_document_pid": null,
+            "lineage": "standalone_21.T11961/f1ec6ed4-9491-4512-9ab8-6678c11db239",
+            "title": "Carbon Footprint Analysis 2024",
+            "description": null,
+            "keywords": [
+                "carbon",
+                "footprint",
+                "emissions",
+                "analysis"
+            ],
+            "author": null,
+            "created_at": "2025-11-14T14:24:57.805476",
+            "yProvIstance": "http://192.168.1.162:8000"
+            }
+},
+{
+    "_index": "documents",
+    "_id": "21.T11961/9d96b1fd-2433-4abc-9e75-2d09247936f4",
+    "_source": {
+            "pid": "21.T11961/9d96b1fd-2433-4abc-9e75-2d09247936f4",
+            "version": 1,
+            "owner_email": "user@example.com",
+            "storage_url": "http://127.0.0.1:8000/documents/21.T11961/9d96b1fd-2433-4abc-9e75-2d09247936f4/download",
+            "parent_document_pid": null,
+            "lineage": "standalone_21.T11961/9d96b1fd-2433-4abc-9e75-2d09247936f4",
+            "title": "Renewable Energy Transition Impact on Regional Climate Patterns",
+            "description": null,
+            "keywords": [
+                "renewable energy",
+                "climate patterns",
+                "solar farms",
+                "wind turbines",
+                "heat island effect",
+                "microclimate",
+                "energy efficiency",
+                "weather systems",
+                "temperature variation",
+                "precipitation patterns"
+            ],
+            "author": null,
+            "created_at": "2025-11-14T14:24:57.805476",
+            "yProvIstance": "http://192.168.1.162:8000"
+            }
+
+},
+{
+    "_index": "documents",
+    "_id": "21.T11961/98ff4c0c-2354-4128-b2f1-866efb7a0f37",
+    "_source": {
+            "pid": "21.T11961/98ff4c0c-2354-4128-b2f1-866efb7a0f37",
+            "version": 1,
+            "owner_email": "user@example.com",
+            "storage_url": "http://127.0.0.1:8000/documents/21.T11961/98ff4c0c-2354-4128-b2f1-866efb7a0f37/download",
+            "parent_document_pid": null,
+            "lineage": "standalone_21.T11961/98ff4c0c-2354-4128-b2f1-866efb7a0f37",
+            "title": "Sea Level Rise Monitoring System Using IoT Sensors",
+            "description": "Real time monitoring system for coastal sea level changes using distributed IoT sensors and tidal gauge networks This experimental tracks millimeter level changes in sea surface height and correlates them with local weather patterns ocean temperature and ice sheet melting rates The system provides early warning capabilities for coastal communities and supports climate adaptation planning through predictive modeling",
+            "keywords": [
+                "sea level rise",
+                "IoT sensors",
+                "coastal monitoring",
+                "tidal gauge",
+                "ocean temperature",
+                "ice sheet melting",
+                "early warning",
+                "climate adaptation",
+                "predictive modeling",
+                "coastal communities"
+            ],
+            "author": null,
+            "created_at": "2025-11-14T14:24:57.805476",
+            "yProvIstance": "http://192.168.1.162:8000"
+            }
+
+},
+{
+    "_index": "documents",
+    "_id": "21.T11961/1e572bf1-0f89-46ca-a733-2d4311b14a53",
+    "_source":  {
+            "pid": "21.T11961/1e572bf1-0f89-46ca-a733-2d4311b14a53",
+            "version": 1,
+            "owner_email": "user@example.com",
+            "storage_url": "http://127.0.0.1:8000/documents/21.T11961/1e572bf1-0f89-46ca-a733-2d4311b14a53/download",
+            "parent_document_pid": null,
+            "lineage": "standalone_21.T11961/1e572bf1-0f89-46ca-a733-2d4311b14a53",
+            "title": "Extreme Weather Events Frequency Analysis and Prediction",
+            "description": "Comprehensive study analyzing the increasing frequency and intensity of extreme weather events including hurricanes droughts floods and heatwaves This experiment combines meteorological data from the past 40 years with climate models to identify patterns and predict future extreme weather occurrences The research incorporates statistical analysis and machine learning to assess the correlation between rising global temperatures and severe weather phenomena",
+            "keywords": [
+                "ocean acidification",
+                "pH levels",
+                "marine biodiversity",
+                "coral reefs",
+                "shellfish",
+                "marine food chains",
+                "CO2 absorption",
+                "ocean conditions",
+                "fisheries",
+                "marine conservation"
+            ],
+            "author": "Luca Bianchi",
+            "created_at": "2025-11-14T14:24:57.805476",
+            "yProvIstance": "http://192.168.1.162:8000"
+            }
+
+},
+{
+    "_index": "documents",
+    "_id": "21.T11961/65e63e7c-76ee-4799-b772-4e10a49dab02",
+    "_source": {
+          "pid": "21.T11961/65e63e7c-76ee-4799-b772-4e10a49dab02",
+          "version": 1,
+          "owner_email": "user@example.com",
+          "storage_url": "http://127.0.0.1:8000/documents/21.T11961/65e63e7c-76ee-4799-b772-4e10a49dab02/download",
+          "parent_document_pid": null,
+          "lineage": "21.T11961/114384b9-4bed-48f9-8f3f-b9f010c80037",
+          "title": "Renewable Energy Optimization 2024",
+          "description": "Study on improving energy efficiency through adaptive renewable source management.",
+          "keywords": [
+            "renewable",
+            "energy",
+            "optimization",
+            "efficiency",
+            "sustainability"
+          ],
+          "author": null,
+          "created_at": "2025-11-14T14:24:57.805476",
+          "yProvIstance": "http://192.168.1.162:8000"
+        }
+},
+
+{
+    "_index": "documents",
+    "_id": "21.T11961/a932e8d9-bb05-4398-b81f-30ec8054a8e0",
+    "_source": {
+          "pid": "21.T11961/a932e8d9-bb05-4398-b81f-30ec8054a8e0",
+          "version": 2,
+          "owner_email": "user@example.com",
+          "storage_url": "http://127.0.0.1:8000/documents/21.T11961/a932e8d9-bb05-4398-b81f-30ec8054a8e0/download",
+          "parent_document_pid": "21.T11961/65e63e7c-76ee-4799-b772-4e10a49dab02",
+          "lineage": "21.T11961/114384b9-4bed-48f9-8f3f-b9f010c80037",
+          "title": "Smart City Data Integration 2024",
+          "description": "Research on unifying urban data sources to enhance city management and decision-making.",
+          "keywords": [
+            "smart city",
+            "data",
+            "integration",
+            "urban",
+            "management"
+          ],
+          "author": null,
+          "created_at": "2025-11-14T14:24:57.805476",
+          "yProvIstance": "http://192.168.1.162:8000"
+        }
+}
+
+]
+
+
+
+

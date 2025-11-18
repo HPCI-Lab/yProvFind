@@ -20,32 +20,9 @@ class IndexService():
         self.fetcher=fetcher #il fetcher restituisce un generatore (iteratore)
         self.embedder= embedder
 
-    async def bulk_indexer(self): 
-        documents=self.fetcher.fetch_documents_async()
-
-        try: 
-            success, errors = await async_bulk(self.es_conn.client, documents)#le bulk di elastich search sono in grado di prendere degli iteratori in modo da poter inserire migliaia di docuemnti senza dover passare liste grandi di dati
-            
-            
-            if errors: 
-                for err in errors:
-                    logger.error(f"Errore indicizzazione documento {err.get('index', {}).get('_id')}: {err}")
-            
-            logger.info(f"Indicizzati {success} documenti, {len(errors)} errori")
-
-            return {
-                "success_count": success,
-                "error_count": len(errors),
-                "has_errors": len(errors) > 0
-            }
-        
-        
-        except Exception as e: 
-            logger.error(f"errors occurs during the fetch of all the files: {e}")
-            raise
-
 
     async def index_enriched_batch(self, enriched_batch: List[Dict]):
+
         try: 
             success, errors = await async_bulk(
             self.es_conn.client, 
@@ -55,7 +32,7 @@ class IndexService():
         )
             return success, errors
         except Exception as e:
-            logger.error(f"Errore processing batch: {e}")
+            logger.error(f"Indexer: failed to index with async_bulk: {e}")
             return 0, [{"error": str(e)} for _ in enriched_batch]                     
         
 

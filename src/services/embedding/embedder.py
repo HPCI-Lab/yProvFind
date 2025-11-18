@@ -28,6 +28,8 @@ class EmbeddingService:
         except Exception as e:
             logger.critical(f"Cannot initialize embedding model: {e}")
             raise
+
+        
     async def add_embeddings_to_batch(self, documents: List[Dict]) -> Tuple[List[Dict], List[Dict]]:
         """
         Processa documenti e restituisce (successi, fallimenti).
