@@ -27,7 +27,7 @@ It analyzes and tokenizes text by eliminating stop words (conjunctions, etc.) to
 #### 2. Semantic search 
 It uses vector representations (embeddings) of sentences and documents to compare meanings rather than exact words, calculating similarity using functions such as cosine similarity. The embedding is performed by Hugging Face's all-MiniLM-L6-v2 model, which generates a vector of 384 features.
 
-#### 3. Hibrid search 
+#### 3. Hybrid search 
 It combines text and semantic matching: Elasticsearch runs both searches in parallel and calculates an overall score that takes into account both keywords and meaning.
 
 #### 4. KNN Search with HNSW
@@ -143,6 +143,8 @@ ypfind registry delete <address>
 ypfind search <query> [--date-from <DD-MM-YYYY>]  [--date-to <DD-MM-YYYY>] [--version <version_number>] [--instance <url>] [--other-versions / --no-other-versions] [--limit <page_size>]
 ypfind tmstamp list
 ypfind tmstamp delete <address>
+ypfind demo start
+ypfind demo end
 
 ```
 
@@ -267,28 +269,37 @@ docker exec yprovfind ypfind tmstamp list
 docker exec yprovfind ypfind tmstamp delete <address>
 ```
 
-**Available commands:**
 
 * **list** — returns all registered yProvStore addresses along with their last update timestamp:
 
-```
-docker exec yprovfind ypfind tmstamp list
-```
 
 * **delete** — removes all stored timestamps for all yProvStore addresses, effectively forcing a full re-index on the next run:
 
-```
-docker exec yprovfind ypfind tmstamp delete <address>
-```
 
-**Options:**
 
-```
---help  Show command help
-```
 
-This component allows efficient incremental indexing by keeping track of the last successful retrieval for each instance.
+### **6. Demo Mode**
 
+The demo mode allows you to test yProvFind without requiring any external yProvStore instances.
+When started, it loads a set of example provenance metadata and indexes them automatically.
+This makes it possible to verify that the system is working correctly and to test all search methods (full-text, semantic, hybrid, and KNN) without any additional setup.
+
+You can manage the demo mode with the following commands:
+ ```
+  docker exec yprovfind ypfind demo start
+  docker exec yprovfind ypfind demo end
+
+ ```
+
+* **Start demo mode**
+  Loads and indexes the sample provenance metadata.
+
+
+* **End demo mode**
+  Removes all demo data and restores the system to its normal state.
+
+
+This mode is useful for quick validation, presentations, and development testing.
 
 
 
