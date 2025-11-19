@@ -203,16 +203,16 @@ Below are examples of supported search modes:
 
 ```
 Full-text search:
-docker exec yprovfind ypfind search climate --ftx
+docker exec yprovfind ypfind search climate --type ftx
 
 Semantic search:
-docker exec yprovfind ypfind search "sea ​​level rise" --smt
+docker exec yprovfind ypfind search "sea ​​level rise" --type smt
 
 Hybrid search:
-docker exec yprovfind ypfind search "geospatial data" --hyb
+docker exec yprovfind ypfind search "geospatial data" --type hyb
 
 Knn search:
-docker exec yprovfind ypfind search forests --knn
+docker exec yprovfind ypfind search forests --type knn
 ```
 
 Additional filtering options are available:
@@ -300,6 +300,7 @@ You can manage the demo mode with the following commands:
 
 
 This mode is useful for quick validation, presentations, and development testing.
+
 
 
 
