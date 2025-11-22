@@ -1,5 +1,5 @@
 import logging 
-from typing import List, Dict, Any
+from typing import List, Dict, Any, Optional
 import asyncio
 import httpx
 from fastapi import HTTPException
@@ -18,13 +18,14 @@ class RegistryService():
     def __init__ (self):
         self.timeout = 5.0
         self.active_list: List[str] = []
-        self.all_list: List[str]= []
+        #self.all_list: List[str]= []
+        self.all_dict_list: Dict[str,Dict]={}
                 
         self.name_file : str = settings.REGISTRY_FILE_NAME
         self.data_dir = Path(settings.REGISTRY_BASE_PATH)
         self.data_dir.mkdir(parents=True, exist_ok=True)#se esiste non solleva eccezioni, se no la crea
         self.complete_path = self.data_dir / self.name_file
-        self.all_list= self._list_load()
+        self.all_dict_list= self._list_load()
 
         #logger.info(f"Path assoluto file registry: {self.complete_path.resolve()}")
         #logger.info(f"Directory corrente: {Path.cwd()}")
@@ -36,20 +37,20 @@ class RegistryService():
             await self.check_avaibility()
             return self.active_list
         except Exception as e: 
-            raise HTTPException(status_code=500, detail=f"Registri internal error: {str(e)}")
+            raise HTTPException(status_code=500, detail=f"Registry internal error: {str(e)}")
     
 
     def get_active_list(self)->List[str]:
         try:
             return self.active_list
         except Exception as e: 
-            raise HTTPException(status_code=500, detail=f"Registri internal error: {str(e)}")
+            raise HTTPException(status_code=500, detail=f"Registry internal error: {str(e)}")
     
-    def get_all_list(self)->List[str]:
+    def get_all_list(self)->Dict[str, Dict]:
         try:
-            return self.all_list
+            return self.all_dict_list
         except Exception as e: 
-            raise HTTPException(status_code=500, detail=f"Registri internal error: {str(e)}")
+            raise HTTPException(status_code=500, detail=f"Registry internal error: {str(e)}")
         
 
 
@@ -57,11 +58,11 @@ class RegistryService():
         self.active_list=[]
         
         tasks= [self.health_check(address)
-               for address in self.all_list]
+               for address in self.all_dict_list]
         
         results = await asyncio.gather (*tasks, return_exceptions=True)
 
-        for address, result in zip (self.all_list , results):
+        for address, result in zip (self.all_dict_list , results):
             #logger.debug(f"TIPO active_list: {type(self.active_list)} - VALORE: {self.active_list}")
             if result is True:  # Servizio attivo
                 self.active_list.append(address)
@@ -100,15 +101,16 @@ class RegistryService():
 
 
 
-    def update_address_list(self, address: str):
+    def update_address_list(self, address: str, other_info: Optional[Dict]=None):
         try:
             normalized_address = address.rstrip('/')
             if len(normalized_address)>2048:
                 logger.warning(f"Max URL lenght permitted: 2048, the given URL lenght is:{len(normalized_address)}")
                 raise HTTPException(status_code=400, detail=f"URL too long: {len(normalized_address)}")
 
-            if normalized_address not in self.all_list:
-                self.all_list.append(normalized_address)
+            if normalized_address not in self.all_dict_list:
+                self.all_dict_list[normalized_address] = other_info if other_info else {}
+                #self.all_list.append(normalized_address)
                 self._save_addresses()
                 
                 logger.info(f"New address added: {normalized_address}")
@@ -117,14 +119,14 @@ class RegistryService():
                 return {
                     "status": "updated",
                     "address": normalized_address,
-                    "total_addresses": len(self.all_list)
+                    "total_addresses": len(self.all_dict_list)
                 }
             else:
                 logger.info(f"Address already present: {normalized_address}")
                 return {
                     "status": "already_present",
                     "address": normalized_address,
-                    "total_addresses": len(self.all_list)
+                    "total_addresses": len(self.all_dict_list)
                 }
         except HTTPException:
             raise
@@ -135,29 +137,31 @@ class RegistryService():
 
 
 
-
-    def _list_load(self)-> List[str]:
+    def _list_load(self) -> Dict[str, Dict]:
         try:
             if self.complete_path.exists():
                 with open(self.complete_path, 'r', encoding='utf-8') as f:
                     data = json.load(f)
-                    logger.info(f"Loaded {len(data)} addresses from memory")
-                    return data
+                    if isinstance(data, dict):
+                        logger.info(f"Loaded {len(data)} addresses from memory")
+                        return data
+                    else:
+                        logger.warning("Registry file content is not a dict. Resetting.")
+                        return {}
             else:
-                logger.info("Registry: Adresses file not found")
-                self._save_addresses([])  # Crea file vuoto
-                return []
+                logger.info("Registry: Addresses file not found")
+                self._save_addresses()  # Creates empty file
+                return {}
         except json.JSONDecodeError as e:
             logger.error(f"Parsing error of registry file: {e}")
-            return []
+            return {}
         except Exception as e:
             logger.error(f"Registry error during the load of addresses file: {e}")
-            return []
+            return {}
 
 
-
-    def _save_addresses(self, addresses: List[str] = None):
-        """Salva la lista degli indirizzi con atomic write"""
+    """
+    def _save_addresses(self, addresses: Dict[str, Dict] = None):
         if addresses is None:
             addresses = self.all_list
             
@@ -178,7 +182,24 @@ class RegistryService():
         except Exception as e:
             logger.error(f"Registry error while saving address list: {e}")
             raise
+    """
 
+    def _save_addresses(self):
+        """Salva il dizionario con atomic write"""
+        try:
+            temp_file = self.complete_path.with_suffix('.tmp')
+            
+            with open(temp_file, 'w', encoding='utf-8') as f:
+                json.dump(self.all_dict_list, f, indent=2, ensure_ascii=False)
+                f.flush()
+                os.fsync(f.fileno())
+            
+            temp_file.replace(self.complete_path)
+            logger.info(f"Saved {len(self.all_dict_list)} addresses")
+            
+        except Exception as e:
+            logger.error(f"Error saving addresses: {e}")
+            raise
 
 
     def delete_address(self, address: str):
@@ -195,7 +216,7 @@ class RegistryService():
                 )
             
             # Verifica se l'indirizzo esiste
-            if normalized_address not in self.all_list:
+            if normalized_address not in self.all_dict_list:
                 logger.warning(f"Address not found: {normalized_address}")
                 raise HTTPException(
                     status_code=404, 
@@ -203,7 +224,8 @@ class RegistryService():
                 )
             
             # Rimuovi dalla lista in memoria
-            self.all_list.remove(normalized_address)
+            #self.all_list.remove(normalized_address)
+            self.all_dict_list.pop(normalized_address)
             
             # Rimuovi anche dalla active_list se presente
             if normalized_address in self.active_list:
@@ -218,7 +240,7 @@ class RegistryService():
             return {
                 "status": "deleted",
                 "address": normalized_address,
-                "total_addresses": len(self.all_list),
+                "total_addresses": len(self.all_dict_list),
                 "active_addresses": len(self.active_list)
             }
             

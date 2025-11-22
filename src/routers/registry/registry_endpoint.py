@@ -1,5 +1,5 @@
 from services.registry.registry import RegistryService
-from typing import Annotated
+from typing import Annotated, Optional, Dict
 from fastapi import APIRouter
 from dishka.integrations.fastapi import DishkaRoute
 from dishka.integrations.fastapi import FromDishka
@@ -12,9 +12,16 @@ registry_router=APIRouter(route_class= DishkaRoute,
                           tags=["Registry"])
 
 
+class ServiceInfo(BaseModel):
+    """Informazioni aggiuntive sul servizio"""
+    nome_istituzione: Optional[str] = None
+    citta: Optional[str] = None
+    stato: Optional[str] = None
+    
 
 class AddressInput(BaseModel):
     address: HttpUrl  # Validazione automatica URL da Pydantic
+    other_info: ServiceInfo
     
     @field_validator('address')
     @classmethod
@@ -24,11 +31,11 @@ class AddressInput(BaseModel):
         
         # Controlla che abbia schema http/https
         if parsed.scheme not in ['http', 'https']:
-            raise ValueError('Lo schema deve essere http o https')
+            raise ValueError('The scheme must be http or https')
         
         # Controlla che abbia un hostname valido
         if not parsed.netloc:
-            raise ValueError('URL deve avere un hostname valido')
+            raise ValueError('URL must have a valid hostname')
         
 
         """"
@@ -48,8 +55,8 @@ class RegistryUpdateResponse(BaseModel):
 
 
 @registry_router.post("/update-list", description="Allows you to add the address of a yProvStore instance. New instances will be contacted with the next fetch.", response_model=RegistryUpdateResponse)
-async def add_address_endpoint(address_input: AddressInput, registry: Annotated[RegistryService, FromDishka()]):
-    result = registry.update_address_list(str(address_input.address))
+async def add_address_endpoint(data: AddressInput, registry: Annotated[RegistryService, FromDishka()]):
+    result = registry.update_address_list(str(data.address), data.other_info.model_dump() if data.other_info else None)
     return result
 
 

@@ -1,4 +1,4 @@
-from STAC_manager import STACManager
+from .STAC_manager import STACManager
 from datetime import datetime
 import asyncio
 import os

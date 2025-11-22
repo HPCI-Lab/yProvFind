@@ -48,7 +48,7 @@ class STACManager:
                 logger.warning("catalogo è non e stai facendo save")
             self.catalog.normalize_hrefs(str(self.base_path))
             self.catalog.save(catalog_type='SELF_CONTAINED')
-            logger.info(f"catalog saved in {self.base_path}")
+            logger.debug(f"catalog saved in {self.base_path}")
 
     
     def add_collection_to_catalog(self,
@@ -146,7 +146,7 @@ class STACManager:
             )
 
         self.catalog.add_item(item)
-        logger.info(f"Item '{item_id}' aggiunto al catalogo")
+        logger.debug(f"Item '{item_id}' aggiunto al catalogo")
         return item
 
     
@@ -264,9 +264,9 @@ class STACManager:
                 errors.append(error)
 
             self.save()
-
-            return {"success": len(batch)-len(errors),
-                    "errors": errors}
+        logger.info(f"Catalog updated with: {len(batch)-len(errors)} docuemnts and: {len(errors)} errors")
+        return {"success": len(batch)-len(errors),
+                "errors": errors}
 
             
             

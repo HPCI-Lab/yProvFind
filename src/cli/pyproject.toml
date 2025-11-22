@@ -14,5 +14,5 @@ dependencies = [
 ]
 
 [project.scripts]
-ypfind = "cli:cli"
+ypfind = "cli.ypfind_cli:cli"
 
