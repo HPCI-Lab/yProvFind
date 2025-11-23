@@ -4,9 +4,9 @@
 
 ## Table of Content
 - [Overview](#overview)
+- [Search methods](##search-methods)
 - [Deployment with Docker](#running-yprovfind-with-docker)
 - [yProvFind CLI](#yprovfind-cli)
-
 
 ## **Overview**
 **yProvFind** is a search engine designed to discover and manage *provenance* records coming from **yProvStore** services distributed worldwide.
@@ -20,7 +20,7 @@ The architecture is built with **FastAPI** (running on *Uvicorn*), exposing REST
 Moreover, **yProvFind** will be able to maintain an up-to-date **STAC (SpatioTemporal Asset Catalog)** containing all indexed provenance records, enabling integration and federation with external services.
 This functionality is currently under development.
 
-### **Search methods**
+* ### **Search methods**
 #### 1. Research full-text 
 It analyzes and tokenizes text by eliminating stop words (conjunctions, etc.) to compare query words with indexed terms, calculating the relevance of results using the BM25 scoring. It is useful for keyword-based searches and text relevance
 
@@ -43,14 +43,14 @@ The setup consists of two containers:
 * **yProvFind** – the main application built from this repository.
 * **Elasticsearch** – pulled automatically from Docker Hub (`docker.elastic.co/elasticsearch/elasticsearch:9.0.3`).
 
-### **1. Requirements**
+#### **1. Requirements**
 
 * **Docker** and **Docker Compose** must be installed on your system.
 
   * On **desktop environments** (Windows, macOS, Linux), simply install from the official website and start **Docker Desktop**.
  
 
-### **2. Create the .env file**
+#### **2. Create the .env file**
 
 Before starting the containers, you **must** create a `.env` file in the root directory of the project. This file contains the credentials needed to connect the `yProvFind` container to Elasticsearch.
 
@@ -68,7 +68,7 @@ ES_PASSWORD=password
 
 
 
-### **3. Build the images**
+#### **3. Build the images**
 
 From the root of the repository, run:
 
@@ -78,7 +78,7 @@ docker compose build
 
 This command builds the **yProvFind** image using the local `Dockerfile`, while pulling the official **Elasticsearch** image from Docker Hub.
 
-### **4. Start the services**
+#### **4. Start the services**
 
 To start the full stack:
 
@@ -95,10 +95,10 @@ docker compose up -d
 
 Once running, **yProvFind** will expose its **FastAPI** endpoints (check the `docker-compose.yml` for the configured port, right now it should be 8002), and **Elasticsearch** will be available internally for indexing and search operations.
 
-### **5. Access the API docs:**
+#### **5. Access the API docs:**
 Open http://localhost:8002/docs in your browser.
 
-### **6. Access the CLI**
+#### **6. Access the CLI**
 
 Once **yprovfind** is fully started, you can interact with it directly from any terminal on your machine.  
 To view all available commands, run:
@@ -107,7 +107,7 @@ To view all available commands, run:
 docker exec yprovfind ypfind --help
 ```
 
-### **7. Stop and clean up**
+#### **7. Stop and clean up**
 
 To stop and remove all running containers, networks, and temporary data:
 
@@ -118,6 +118,24 @@ docker compose down
 
 
 ## **yProvFind CLI**
+
+* ### **All commands**
+```
+ypfind start-index
+ypfind registry list 
+ypfind registry add <address>
+ypfind registry delete <address>
+ypfind search <query> [--date-from <DD-MM-YYYY>]  [--date-to <DD-MM-YYYY>] [--version <version_number>] [--instance <url>] [--other-versions / --no-other-versions] [--limit <page_size>]
+ypfind tmstamp list
+ypfind tmstamp delete <address>
+ypfind demo start
+ypfind demo end
+
+```
+
+
+
+* ### **Use the cli in the docker container**
 The command-line interface is installed automatically inside the **yprovfind** container.
 To use it, all commands must be prefixed with:
 
@@ -133,42 +151,89 @@ You can run these commands from **any terminal**, as long as:
 2. The `yprovfinddocker` environment is fully started (this includes both the `elasticsearch` container and the `yprovfind` container).
 
 Once these conditions are met, you can execute any CLI command. 
-### **All commands**
-The prefix **docker exec yprovfind** must be added to each command
 ```
-ypfind start-index
-ypfind registry list 
-ypfind registry add <address>
-ypfind registry delete <address>
-ypfind search <query> [--date-from <DD-MM-YYYY>]  [--date-to <DD-MM-YYYY>] [--version <version_number>] [--instance <url>] [--other-versions / --no-other-versions] [--limit <page_size>]
-ypfind tmstamp list
-ypfind tmstamp delete <address>
-ypfind demo start
-ypfind demo end
-
+# Example: search
+docker exec yprovfind ypfind search "climate change" --other-versions
 ```
+* ### **Install the CLI for remote use**
+The cli has the ability to indicate the URL address to which calls are to be made, therefore it can be installed remotely
+#### **Windows**
+
+1. Open a terminal (Command Prompt or PowerShell)
+2. Navigate to the root directory of the project:
+   ```cmd
+   cd path\to\project
+   ```
+3. Run the setup script:
+   ```cmd
+   prepare_cli.bat
+   ```
+
+4. Activate the virtual enviroment
+   ```cmd
+   .venv\Scripts\activate.bat
+   ```
+
+#### **Linux / macOS**
+
+1. Open a terminal
+2. Navigate to the root directory of the project:
+   ```bash
+   cd path/to/project
+   ```
+3. Make the setup script executable (first time only):
+   ```bash
+   chmod +x prepare_cli.sh
+   ```
+4. Run the setup script:
+   ```bash
+   ./prepare_cli.sh
+   ```
+5. Activate the virtual enviroment
+   ```bash
+   source .venv/bin/activate
+   ```
+
+* ### **How to use**
+You can use the CLI remotely in two ways.
+
+**1.** Run the ypfind command with the --url flag, and all requests will be sent to that address.
+   ```cmd
+   # Example: display help
+   ypfind --url http://127.0.0.1:8002 --help
+   ```
+
+**2.** Set the environment variable BASE_API_URL to the remote address. When this variable is set, you don’t need to specify the URL every time you run the command.
+For example:
+
+On Windows (PowerShell):
+`$env:BASE_API_URL="http://127.0.0.1:8002"`
+
+On macOS or Linux (shell):
+`export BASE_API_URL="http://127.0.0.1:8002"`
 
 
-### **1. General**
+* ### **All command desription**
+#### **1. General**
 To list all available options:
 ```
-docker exec yprovfind ypfind --help
+ypfind --help
 ```
-### **2. Start the indexing process**
+#### **2. Start the indexing process**
 In order to manually start the indexing process you can type:
 ```
-docker exec yprovfind ypfind start-index
+ypfind start-index
 ```
 The process checks the yProvStore instances in the registry list. For each active instance, it looks at the last timestamp—the time it was last queried to retrieve provenance metadata—and uses this information to request only the new or updated files since that date. Once the process is complete, the results are displayed.
 
-### **3. Registry**
+#### **3. Registry**
 
 The registry manages the list of yProvStore addresses. You can list, add, and delete these addresses using the following commands:
 
 ```
-docker exec yprovfind ypfind registry list
-docker exec yprovfind ypfind registry add <address>
-docker exec yprovfind ypfind registry delete <address>
+ypfind registry list
+ypfind registry add <address>
+ypfind registry delete <address>
 ```
 
 Addresses must be provided in a valid URL format. The input is validated through `pydantic` (`BaseModel`, `HttpUrl`, and `field_validator`), so incorrectly formatted addresses will result in an error.
@@ -177,24 +242,24 @@ Addresses must be provided in a valid URL format. The input is validated through
 * Using a domain name:
 
 ```
-docker exec yprovfind ypfind registry add http://example.com:9000
+ypfind registry add http://example.com:9000
 ```
 
 * Using an IP address:
 
 ```
-docker exec yprovfind ypfind registry delete http://192.129.202.10:8000
+ypfind registry delete http://192.129.202.10:8000
 ```
 
 
-### **4. Search**
+#### **4. Search**
 
 The CLI provides four search methods to query documents stored across the registered yProvStore instances: **Full-text search**, **Semantic search**, **Hybrid search**, **KNN search (HSNW)**
 
 You can run searches using:
 
 ```
-docker exec yprovfind ypfind search  <QUERY> [OPTIONS]
+ypfind search  <QUERY> [OPTIONS]
 ```
 
 **QUERY** is the text you want to search for.
@@ -203,32 +268,32 @@ Below are examples of supported search modes:
 
 ```
 Full-text search:
-docker exec yprovfind ypfind search climate --type ftx
+ypfind search climate --type ftx
 
 Semantic search:
-docker exec yprovfind ypfind search "sea ​​level rise" --type smt
+ypfind search "sea ​​level rise" --type smt
 
 Hybrid search:
-docker exec yprovfind ypfind search "geospatial data" --type hyb
+ypfind search "geospatial data" --type hyb
 
 Knn search:
-docker exec yprovfind ypfind search forests --type knn
+ypfind search forests --type knn
 ```
 
 Additional filtering options are available:
 
 ```
 Search with date range:
-docker exec yprovfind ypfind search "climate change" --date-from 01-01-2024 --date-to 31-12-2024
+ypfind search "climate change" --date-from 01-01-2024 --date-to 31-12-2024
 
 Search specific version:
-docker exec yprovfind ypfind search "climate change" --version 3
+ypfind search "climate change" --version 3
 
 Search from a specific instance:
-docker exec yprovfind ypfind search "climate change" --instance http://localhost:8000
+ypfind search "climate change" --instance http://localhost:8000
 
 Include other versions:
-docker exec yprovfind ypfind search "climate change" --other-versions
+ypfind search "climate change" --other-versions
 ```
 
 **Available options:**
@@ -257,7 +322,7 @@ docker exec yprovfind ypfind search "climate change" --other-versions
 > **Note:** You can search directly the documents PID, but in this case the full-text search and hybrid search are the recommended ones to use as they check for the exact match.
 
 
-### **5. Timestamp**
+#### **5. Timestamp**
 
 The **Timestamp** component keeps track of the last time each yProvStore instance (i.e., each registered address) was queried to download provenance metadata.
 Whenever the indexing process is run, the timestamp for each address is updated. This ensures that on the next indexing run, only new or updated data is retrieved instead of downloading everything again.
@@ -265,8 +330,8 @@ Whenever the indexing process is run, the timestamp for each address is updated.
 You can manage timestamps through the CLI:
 
 ```
-docker exec yprovfind ypfind tmstamp list
-docker exec yprovfind ypfind tmstamp delete <address>
+ypfind tmstamp list
+ypfind tmstamp delete <address>
 ```
 
 
@@ -278,7 +343,7 @@ docker exec yprovfind ypfind tmstamp delete <address>
 
 
 
-### **6. Demo Mode**
+#### **6. Demo Mode**
 
 The demo mode allows you to test yProvFind without requiring any external yProvStore instances.
 When started, it loads a set of example provenance metadata and indexes them automatically.
@@ -286,20 +351,21 @@ This makes it possible to verify that the system is working correctly and to tes
 
 You can manage the demo mode with the following commands:
  ```
-  docker exec yprovfind ypfind demo start
-  docker exec yprovfind ypfind demo end
+  ypfind demo start
+  ypfind demo end
 
  ```
 
-* **Start demo mode**
+**Start demo mode**
   Loads and indexes the sample provenance metadata.
 
 
-* **End demo mode**
+**End demo mode**
   Removes all demo data and restores the system to its normal state.
 
 
 This mode is useful for quick validation, presentations, and development testing.
+
 
 
 
