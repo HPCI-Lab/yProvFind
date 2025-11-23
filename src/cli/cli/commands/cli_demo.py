@@ -12,6 +12,10 @@ def demo():
 @click.command()
 @click.pass_context
 def start(ctx):
+    """
+    index some sample documents
+
+    """
     apiclient : APIClient = ctx.obj["client"]
     try:
         with console.status("[blue]", spinner="dots"):
@@ -58,6 +62,10 @@ demo.add_command(start)
 @click.command()
 @click.pass_context
 def end(ctx): 
+    """
+    delete sample documents
+    
+    """
     apiclient:APIClient=ctx.obj["client"]
     try:
         with console.status("[blue]", spinner="dots"):
