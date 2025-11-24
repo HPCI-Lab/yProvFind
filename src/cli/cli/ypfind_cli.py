@@ -1,10 +1,10 @@
 import click
-from cli.cli.utils.api_client import APIClient
-from cli.cli.commands.cli_indexing import start_index
-from cli.cli.commands.cli_registry import registry
-from cli.cli.commands.cli_search import search
-from cli.cli.commands.cli_timestamp import tmstamp
-from cli.cli.commands.cli_demo import demo
+from .utils.api_client import APIClient
+from .commands.cli_indexing import start_index
+from .commands.cli_registry import registry
+from .commands.cli_search import search
+from .commands.cli_timestamp import tmstamp
+from .commands.cli_demo import demo
 @click.group()
 @click.option(
     "--url",
