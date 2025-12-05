@@ -15,7 +15,7 @@ from .commands.cli_demo import demo
 )
 @click.option(
     "--timeout",
-    default=300,
+    default=60,
     type=int,
     show_default=True,
     help="Set the timeout for API calls (in seconds)"

@@ -14,9 +14,9 @@ registry_router=APIRouter(route_class= DishkaRoute,
 
 class ServiceInfo(BaseModel):
     """Informazioni aggiuntive sul servizio"""
-    nome_istituzione: Optional[str] = None
-    citta: Optional[str] = None
-    stato: Optional[str] = None
+    institution: Optional[str] = None
+    city: Optional[str] = None
+    country: Optional[str] = None
     
 
 class AddressInput(BaseModel):

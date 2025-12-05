@@ -26,6 +26,7 @@ def addresses_list(ctx):
             console.print("\n[white]Addresses list:[/white]")
         for i, item in enumerate(response, 1):
             console.print(f"[cyan]{i}.[/cyan] {item}")
+            console.print(f"[white]    {response[item]}[/white] ")
 
         console.print("\n")
 
@@ -55,9 +56,22 @@ def add_address(ctx, address: str):
 
     api_client: APIClient= ctx.obj["client"]
 
+    institution = click.prompt("Institution: ",default="None", type=str)
+    city = click.prompt("City: ",default="None", type=str)
+    country = click.prompt("Country: ",default="None", type=str)
+
+    info = {
+        "address": address,
+        "other_info": {
+            "institution": institution,
+            "city": city,
+            "country": country
+        }
+    }
+
     try:
         with console.status("[blue]Adding new address...", spinner="dots"):
-            response = api_client.post("/registry/update-list", json={"address": address})
+            response = api_client.post("/registry/update-list", json=info)
         status = response.get("status")
         if status == 'updated':
             status_color = "green"

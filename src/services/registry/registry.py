@@ -109,7 +109,10 @@ class RegistryService():
                 raise HTTPException(status_code=400, detail=f"URL too long: {len(normalized_address)}")
 
             if normalized_address not in self.all_dict_list:
-                self.all_dict_list[normalized_address] = other_info if other_info else {}
+                self.all_dict_list[normalized_address] = other_info if other_info else {"institution":"none",
+                                                                                        "city": "none",
+                                                                                        "country":"none"
+                                                                                        }
                 #self.all_list.append(normalized_address)
                 self._save_addresses()
                 

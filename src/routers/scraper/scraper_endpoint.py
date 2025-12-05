@@ -28,7 +28,7 @@ class ScraperResponse(BaseModel):
 
 @scraper_router.get("/date-fetch", response_model=ScraperResponse)
 async def fetch_all( SFEI_controller: Annotated[SFEIController, FromDishka()] ):
-    try:
+    try:    
         logger.info("Start document fetching")
         result = await SFEI_controller.SFEI_init()
         return result
