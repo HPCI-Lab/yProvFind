@@ -14,8 +14,8 @@ logger=logging.getLogger(__name__)
 
 
 delete_router = APIRouter(route_class=DishkaRoute,
-                         prefix="/delete",
-                         tags=["Delete"])
+                         prefix="/documents",
+                         tags=["Documents"])
 
 
 

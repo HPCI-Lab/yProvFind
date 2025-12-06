@@ -4,7 +4,7 @@ from services import providers
 from dishka import make_async_container
 from dishka.integrations.fastapi import setup_dishka
 from services.elasticSearch.connection.es_connection import ElasticSearchConnection
-from services.orchestration.SFEI_controller import SFEIController
+from services.orchestration.RSEI_controller import RSEIController
 import logging
 import asyncio
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
@@ -24,7 +24,7 @@ def create_lifespan(container):
         
         async with container() as request_container:
             try:
-                SFEI_controller = await request_container.get(SFEIController)
+                SFEI_controller = await request_container.get(RSEIController)
                 await SFEI_controller.SFEI_init()
                 logger.info("SFEI process successfully completed")
             except Exception as e:
@@ -35,7 +35,7 @@ def create_lifespan(container):
         async with container() as request_container:
             try:
                 await request_container.get(ElasticSearchConnection)
-                SFEI_controller = await request_container.get(SFEIController)
+                SFEI_controller = await request_container.get(RSEIController)
                 await SFEI_controller.SFEI_init()
                 logger.info("Starter successfully completed ")
             except Exception as e:
