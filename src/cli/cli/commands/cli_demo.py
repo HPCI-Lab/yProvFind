@@ -7,6 +7,7 @@ console = Console()
 
 @click.group()
 def demo():
+    """Load or delete the example documents"""
     pass
 
 @click.command()

@@ -9,7 +9,7 @@ console = Console()
 
 @click.group()
 def registry():
-    """Registry related commands."""
+    """Commands for managing regitry addresses."""
     pass
 
 

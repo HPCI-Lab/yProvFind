@@ -9,6 +9,7 @@ console = Console()
 
 @click.group()
 def scraper():
+    "start the indexing and monitoring process"
     pass
 
 

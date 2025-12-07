@@ -1,6 +1,6 @@
 import click
 from .utils.api_client import APIClient
-from .commands.cli_indexing import scraper
+from .commands.cli_scraper import scraper
 from .commands.cli_registry import registry
 from .commands.cli_search import search
 from .commands.cli_timestamp import tmstamp

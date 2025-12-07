@@ -66,7 +66,7 @@ def search(
     limit: Optional[int]
 ):
     """
-    Perform full-text search on documents.
+    Perform search on documents.
     
     QUERY: The search term(s) to look for
     
