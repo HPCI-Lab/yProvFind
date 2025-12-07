@@ -4,9 +4,15 @@
 
 ## Table of Content
 - [Overview](#overview)
-- [Search methods](##search-methods)
-- [Deployment with Docker](#running-yprovfind-with-docker)
+  - [Search methods](#search-methods)
+- [Running yProvFind with Docker](#running-yprovfind-with-docker)
 - [yProvFind CLI](#yprovfind-cli)
+  - [All commands](#all-commands)
+  - [Use the cli in the docker container](#use-the-cli-in-the-docker-container)
+  - [Install the CLI for remote use](#install-the-cli-for-remote-use)
+  - [How to use](#how-to-use)
+  - [All command desription](#All-command-desription)
+
 
 ## **Overview**
 **yProvFind** is a search engine designed to discover and manage *provenance* records coming from **yProvStore** services distributed worldwide.
@@ -21,6 +27,8 @@ Moreover, **yProvFind** will be able to maintain an up-to-date **STAC (SpatioTem
 This functionality is currently under development.
 
 * ### **Search methods**
+
+
 #### 1. Research full-text 
 It analyzes and tokenizes text by eliminating stop words (conjunctions, etc.) to compare query words with indexed terms, calculating the relevance of results using the BM25 scoring. It is useful for keyword-based searches and text relevance
 
@@ -35,6 +43,7 @@ This search method uses the Hierarchical Navigable Small World (HNSW) algorithm 
 
 
 
+---
 ## **Running yProvFind with Docker**
 
 The project includes a `docker-compose.yml` file that defines all required services to run **yProvFind** and its dependencies.
@@ -42,6 +51,7 @@ The setup consists of two containers:
 
 * **yProvFind** – the main application built from this repository.
 * **Elasticsearch** – pulled automatically from Docker Hub (`docker.elastic.co/elasticsearch/elasticsearch:9.0.3`).
+
 
 #### **1. Requirements**
 
@@ -115,13 +125,16 @@ To stop and remove all running containers, networks, and temporary data:
 docker compose down
 ```
 
+---
 
 
 ## **yProvFind CLI**
 
 * ### **All commands**
 ```
-ypfind start-index
+ypfind scraper start-index
+ypfind scraper index-status
+ypfind scraper reset-index
 ypfind registry list 
 ypfind registry add <address>
 ypfind registry delete <address>
@@ -219,12 +232,49 @@ To list all available options:
 ```
 ypfind --help
 ```
-#### **2. Start the indexing process**
-In order to manually start the indexing process you can type:
+
+#### **2. Indexing process**
+
+This component handles the indexing of provenance metadata coming from all active **yProvStore** instances registered in the system.
+For each instance, the scraper reads the last stored timestamp (the time of the last successful query) and retrieves only new or updated records since that point.
+
+You can start the indexing process, monitor its status, and reset the stored progress using the following commands:
+
 ```
-ypfind start-index
+ypfind scraper start-index
+ypfind scraper index-status
+ypfind scraper reset-index
 ```
-The process checks the yProvStore instances in the registry list. For each active instance, it looks at the last timestamp—the time it was last queried to retrieve provenance metadata—and uses this information to request only the new or updated files since that date. Once the process is complete, the results are displayed.
+
+**start-index**
+Starts the full indexing process.
+By default, it waits until completion and displays progress.
+If you need it to run in background without waiting, use the option:
+
+```
+ypfind scraper start-index --no-wait
+```
+
+You can also adjust the polling frequency using:
+
+```
+ypfind scraper start-index --poll-interval <seconds>
+```
+
+---
+
+**index-status**
+Shows the current progress and status of the indexing operation.
+Useful to check whether the process is still active or already completed.
+
+---
+
+**reset-index**
+Resets the saved indexing status.
+Use this if you want to delete the status information remains after a completed process.
+
+---
+
 
 #### **3. Registry**
 
@@ -365,6 +415,7 @@ You can manage the demo mode with the following commands:
 
 
 This mode is useful for quick validation, presentations, and development testing.
+
 
 
 
