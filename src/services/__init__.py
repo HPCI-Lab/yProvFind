@@ -12,6 +12,7 @@ from .elasticSearch.update_documents.update_documents_provider import UpdateDocu
 from .stac_catalog.STAC_provider import STACProvider
 from .demo.demo import DemoProvider
 from .orchestration.RSEI_provider import RSEIStatusProvider
+from .elasticSearch.file_counter.file_counter import FileCounterProvider
 __all__ = ("providers",)
 
 providers =[ElasticSearchService,
@@ -29,6 +30,7 @@ providers =[ElasticSearchService,
             UpdateDocumentsProvider,
             STACProvider,
             DemoProvider,
-            RSEIStatusProvider
+            RSEIStatusProvider,
+            FileCounterProvider
             
             ]

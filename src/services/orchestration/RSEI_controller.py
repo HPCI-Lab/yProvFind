@@ -72,13 +72,16 @@ class RSEIController():
                     embed_total_success += len(enriched_batch)
                     embed_total_failed.extend(embed_failed)
                     
+                    #data extraction
+                    
+
                     # Indexing
                     es_success, es_errors = await self.indexer.index_enriched_batch(enriched_batch)
                     es_total_success += es_success
                     es_total_errors.extend(es_errors)
                     
                     # STAC catalog update
-                    #await asyncio.to_thread(self.STACManager.catalogListUpdate, documents)
+                    await asyncio.to_thread(self.STACManager.catalogListUpdate, enriched_batch)
                     await self.status.update_counters(es_indexed=es_total_success,
                                                         es_errors=len(es_total_errors), 
                                                         embed_success= embed_total_success, 

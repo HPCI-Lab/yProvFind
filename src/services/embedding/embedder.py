@@ -10,21 +10,29 @@ logger = logging.getLogger(__name__)
 
 class EmbeddingService:
     def __init__(self, model_name: str = "all-MiniLM-L6-v2"):
+        
+
+
         #non serve specificare il percorso, hugging face ricerca automaticamente tra le cartelle del progetto modelCache/all-MiniLM-L6-v2
         try:
             if settings.USE_LOCAL_EMBEDDER:
                 self.model = SentenceTransformer(model_name, local_files_only=True)
                 logger.info("Model loaded from local cache")
+                
             else:
                 # Prova prima locale (cache da download precedente)
                 try:
                     self.model = SentenceTransformer(model_name, local_files_only=True)
                     logger.info("Model found in cache (offline mode)")
+                    
                 except:
                     # Scarica se non in cache
                     logger.info(f"Downloading model {model_name}...")
                     self.model = SentenceTransformer(model_name, local_files_only=False)
                     logger.info("Model downloaded successfully")
+                    
+            self.max_token_number = self.model.get_max_seq_length()
+            logger.info(type(self.max_token_number))
         except Exception as e:
             logger.critical(f"Cannot initialize embedding model: {e}")
             raise
@@ -54,6 +62,15 @@ class EmbeddingService:
                         "index": idx
                     })
                     continue
+                
+                #verifica che il documento non contenga piu token di quelli che porcessa il modello di embedding
+                token=self.model.tokenizer(text)
+                num_token=len(token["input_ids"])
+                if  num_token > self.max_token_number:
+                    logger.warning(f"The number of tokens in the document exceeds the maximum number of " \
+                    f"tokens that the embedding template can process. Only the first {self.max_token_number} tokens in the document " \
+                    f"will be embedding. \nNumber of token in the file: {num_token} \nNumber of tokens that will be discard:{num_token-self.max_token_number}")
+
                 
                 valid_items.append((idx, doc, text))
                 

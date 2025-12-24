@@ -11,6 +11,7 @@ from .index_manager.indexManager_endpoint import index_manager_router
 from .registry.registry_endpoint import registry_router
 from .timestamp_manager.timestamp_manager import timestamp_router
 from .demo.demo_endpoint import demo_router
+from .file_counter.file_counter_endpoint import counter_router
 __all__ = ('root_routes',) #scrivere questo serve perche dice cosa esportare qunado si scrive from root import *. In questo caso esporta solo root_routes
 logger = logging.getLogger(__name__)
 
@@ -30,7 +31,8 @@ all_routes : tuple [APIRouter,...] = (
                     index_manager_router,
                     registry_router,
                     timestamp_router,
-                    demo_router
+                    demo_router, 
+                    counter_router
                 )
 
 

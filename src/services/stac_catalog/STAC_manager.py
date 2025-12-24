@@ -43,12 +43,16 @@ class STACManager:
             return self.catalog
             
 
+    # Ottimizza anche il metodo save per evitare operazioni ridondanti
     def save(self):
-            if self.catalog is None:
-                logger.warning("catalogo è non e stai facendo save")
-            self.catalog.normalize_hrefs(str(self.base_path))
-            self.catalog.save(catalog_type='SELF_CONTAINED')
-            logger.debug(f"catalog saved in {self.base_path}")
+        if self.catalog is None:
+            logger.warning("Catalog is None, cannot save")
+            return
+        
+        self.catalog.normalize_hrefs(str(self.base_path))
+        self.catalog.save(catalog_type='SELF_CONTAINED')
+        logger.debug(f"Catalog saved in {self.base_path}")
+
 
     
     def add_collection_to_catalog(self,
@@ -217,7 +221,7 @@ class STACManager:
 
 
     def catalogListUpdate(self, batch: List[Dict]):
-        errors=[]
+        errors = []
 
         try:
             if self.catalog is None:
@@ -226,16 +230,21 @@ class STACManager:
                 else:
                     self.loadSTACCatalog()
         except Exception as e:
-            logger.error("Is not possible to instanciate the catalog")
+            logger.error("Is not possible to instantiate the catalog")
             raise RuntimeError("Failed to create or load STAC catalog") from e
-            
         
+        # Processa tutti gli items
         for prov in batch: 
+            try:
+                metadata = prov.get("_source")
+                _pid = prov.get("_id")
 
-            metadata = prov.get("_source")
-            _pid=  prov.get("_id")
+                if _pid is None:
+                    error = f"missing PID in: {prov}"
+                    logger.error(error)
+                    errors.append(error)
+                    continue
 
-            if _pid is not None:
                 self.add_item_to_catalog(
                     item_id=_pid,
                     properties={
@@ -251,22 +260,34 @@ class STACManager:
                     assets={
                         "provenance": {
                             "href": metadata.get("storage_url"),
-                            "type": "application/json",    # MIME type (es. provenance JSON)
+                            "type": "application/json",
                             "title": "Provenance file",
-                            "roles": ["data"]              # opzionale ma consigliato
+                            "roles": ["data"]
                         }
                     }
                 )
-
-            else:
-                error=f"missing PID in: {prov}"
+            except Exception as e:
+                error = f"Error processing item {prov.get('_id')}: {str(e)}"
                 logger.error(error)
                 errors.append(error)
-
+        
+        # ✅ SALVA UNA SOLA VOLTA ALLA FINE
+        try:
             self.save()
-        logger.info(f"Catalog updated with: {len(batch)-len(errors)} docuemnts and: {len(errors)} errors")
-        return {"success": len(batch)-len(errors),
-                "errors": errors}
+        except Exception as e:
+            logger.error(f"Error saving catalog: {str(e)}")
+            raise
+
+        success_count = len(batch) - len(errors)
+        logger.info(f"Catalog updated with: {success_count} documents and: {len(errors)} errors")
+        
+        return {
+            "success": success_count,
+            "errors": errors
+        }
+
+
+
 
             
             
