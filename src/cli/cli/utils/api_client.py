@@ -53,11 +53,14 @@ class APIClient:
     def get(self, endpoint: str, params: Optional[Dict] = None) -> Dict[str, Any]:
         return self._make_request("GET", endpoint, params=params)
     
-    def post(self, endpoint: str, json: Optional[Dict] = None) -> Dict[str, Any]:
-        return self._make_request("POST", endpoint, json=json)
+    def post(self, endpoint: str, params: Optional[Dict] = None, json: Optional[Dict] = None) -> Dict[str, Any]:
+        return self._make_request("POST", endpoint, params=params, json=json)  
     
     def delete(self, endpoint: str, params: Optional[Dict] = None) -> Dict[str, Any]:
         return self._make_request("DELETE", endpoint, params=params)
+    
+    def patch(self, endpoint: str, params: Optional[Dict] = None, json: Optional[Dict] = None) -> Dict[str, Any]:
+        return self._make_request("PATCH", endpoint, params=params, json=json)
 
 # Eccezioni custom
 class APIError(click.ClickException):

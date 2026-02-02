@@ -26,32 +26,68 @@ def indexing_process():
     is_flag=True,
     help='Start process and exit without waiting for completion'
 )
+@click.option(
+    '--batch-delay',
+    default=0,
+    help='Delay between batches in seconds (default: 0)',
+    type=click.IntRange(0, 3600)
+)
+@click.option(
+    '--batch-size',
+    default=5,
+    help='Number of documents per batch (default: 5)',
+    type=click.IntRange(1, 50)
+)
+@click.option(
+    '--enrich/--no-enrich',
+    default=True,
+    help='Enable or disable LLM semantic enrichment (default: enrich)'
+)
 @click.pass_context
-def start(ctx, poll_interval: int, no_wait: bool):
+def start(ctx, poll_interval: int, no_wait: bool, batch_delay: int, batch_size: int, enrich: bool):
     """
-    Starts the full indexing process.
-    
-    This command triggers the indexing of all documents
-    from active yProv instances to ElasticSearch.
-    
+    Start the indexing and semantic enrichment process.
+
+    This command fetches provenance documents in batches, optionally enriches them 
+    using an LLM, and indexes them into Elasticsearch.
+
+    SHOW PROGRESS
     By default, it waits for the process to complete and shows progress.
     Use --no-wait to start the process and exit immediately.
+
+    BATCHING & RATE LIMITING:
+    - Use --batch-size to control memory and throughput (max 50).
+    - Use --batch-delay to prevent API rate-limiting (429 errors) during enrichment.
+
+    METADATA ENFORCEMENT:
+    - With --enrich (default): The LLM generates metadata for all files.
+    - With --no-enrich: Only documents with existing metadata are indexed. 
+      Files without metadata will be skipped.
+
+    To resume or retry skipped files, restart the process with an updated timestamp.
+    
     """
     api_client: APIClient = ctx.obj["client"]
     
     try:
-        # Start the process
+        # Costruiamo i parametri per la query string
+        params = {
+            "batch_delay": batch_delay,
+            "batch_size": batch_size,
+            "use_enricher": str(enrich).lower() # FastAPI si aspetta 'true'/'false'
+        }
+
         console.print("[blue]Starting indexing process...[/blue]")
-        start_response = api_client.post("/indexing-process/start")
+        # Passiamo i params nella chiamata POST
+        start_response = api_client.post("/indexing-process/start", params=params)
         
         console.print(f"[green]✓ {start_response.get('message', 'Process started')}[/green]")
         
         if no_wait:
             console.print("\n[yellow]Process started in background.[/yellow]")
-            console.print("[dim]Use 'yprovfind index status' to check progress[/dim]")
+            console.print("[dim]Use 'yprovfind indexing-process status' to check progress[/dim]")
             return
         
-        # Poll for status until completion
         console.print("\n[blue]Monitoring process...[/blue]")
         _monitor_process(api_client, poll_interval)
         
@@ -81,6 +117,9 @@ def start(ctx, poll_interval: int, no_wait: bool):
         raise click.Abort()
 indexing_process.add_command(start)
 
+
+
+
 @click.command()
 @click.pass_context
 def status(ctx):
@@ -93,7 +132,8 @@ def status(ctx):
     api_client: APIClient = ctx.obj["client"]
     
     try:
-        response = api_client.get("/indexing-process/status")
+        with console.status("[blue]Status...", spinner="dots"):
+            response = api_client.get("/indexing-process/status")
         _display_status(response)
         
     except APIHTTPError as e:
@@ -109,6 +149,10 @@ def status(ctx):
         console.print(f"\n[red]✗ Error: {str(e)}[/red]")
         raise click.Abort()
 indexing_process.add_command(status)
+
+
+
+
 
 @click.command()
 @click.pass_context
@@ -142,6 +186,9 @@ def status_reset(ctx):
 indexing_process.add_command(status_reset)
 
 
+
+
+
 @click.command()
 @click.pass_context
 def abort(ctx):
@@ -151,7 +198,9 @@ def abort(ctx):
     api_client:APIClient = ctx.obj["client"]
 
     try: 
-        response = api_client.get("/indexing-process/abort")
+        with console.status("[blue]Abort...", spinner="dots"):
+            response = api_client.delete("/indexing-process/abort")
+        
         console.print(f"[yellow] {response.get('message')}[/yellow]")
 
     except APIHTTPError as e:
@@ -167,13 +216,17 @@ def abort(ctx):
 indexing_process.add_command(abort)
 
 
+
+
+
 @click.command()
 @click.pass_context
 def errors(ctx):
     """List all the errors occurred during the process."""
     api_client:APIClient = ctx.obj["client"]
     try:
-        response:Dict = api_client.get("/indexing-process/errors")
+        with console.status("[blue]Error list...", spinner="dots"):
+            response:Dict = api_client.get("/indexing-process/errors")
         for k, v in response.items():
             console.print(f"[blue]\n\n{k}:[/blue]")
             for s in v:

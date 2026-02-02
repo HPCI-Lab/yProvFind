@@ -1,9 +1,30 @@
-from openai import OpenAI, AsyncOpenAI
 from settings import settings
 import asyncio
 
 
-class LLMModel:
+
+
+from groq import AsyncGroq
+class Groq:
+    def __init__(self):
+        self.client = AsyncGroq(api_key=settings.GROQ_API_KEY)
+
+    async def chat(self, prompt: str):
+        completion = await self.client.chat.completions.create(
+            model="openai/gpt-oss-120b",
+            messages=[
+                {
+                    "role": "user",
+                    "content": prompt,
+                }
+            ],
+        )
+
+        return completion.choices[0].message.content
+
+"""
+from openai import OpenAI, AsyncOpenAI
+class OpenRouter:
     def __init__(self):
         self.client= AsyncOpenAI(
                     base_url="https://openrouter.ai/api/v1",
@@ -43,23 +64,4 @@ class Gemini:
 
         response = await asyncio.to_thread(call)
         return response.text
-    
-
-
-from groq import AsyncGroq
-class Groq:
-    def __init__(self):
-        self.client = AsyncGroq(api_key=settings.GROQ_API_KEY)
-
-    async def chat(self, prompt: str):
-        completion = await self.client.chat.completions.create(
-            model="openai/gpt-oss-120b",
-            messages=[
-                {
-                    "role": "user",
-                    "content": prompt,
-                }
-            ],
-        )
-
-        return completion.choices[0].message.content
+"""

@@ -53,7 +53,7 @@ def delete_address_timestamp(address:str, timeManager: Annotated[TimestampManage
     return timeManager.delete_address_last_fetch(address)
 
 
-@timestamp_router.patch("/timestamps", description="Update timestamp for one address")
+@timestamp_router.patch("/update", description="Update timestamp for one address")
 async def update_one_timestamp(address: str, update: TimestampUpdate, timeManager: Annotated[TimestampManager, FromDishka()]):
         return timeManager.update_timestmap(address, update.data)
 

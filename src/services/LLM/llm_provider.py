@@ -1,18 +1,22 @@
 from dishka import Scope, Provider, provide
-from .llm import LLMModel
-from .llm import Gemini
 from .llm import Groq
-class LLMProvider(Provider):
 
+#from .llm import OpenRouter
+#from .llm import Gemini
+
+
+class LLMProvider(Provider):
     @provide(scope=Scope.APP)
-    def llm_provider(self)->LLMModel:
-        return LLMModel()
+    def llm_provider_gemini(self)->Groq:
+        return Groq()
+    """
+    @provide(scope=Scope.APP)
+    def llm_provider(self)->OpenRouter:
+        return OpenRouter()
     
     @provide(scope=Scope.APP)
     def llm_provider_gemini(self)->Gemini:
         return Gemini()
+    """
 
-    @provide(scope=Scope.APP)
-    def llm_provider_gemini(self)->Groq:
-        return Groq()
 

@@ -23,7 +23,7 @@ services:
 
   yprovfind:
     build: .
-    container_name: yprovfind
+    container_name: yprovfind2.0
     depends_on:
       elasticsearch:
         condition: service_healthy

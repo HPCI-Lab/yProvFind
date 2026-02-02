@@ -20,7 +20,7 @@ def start(ctx):
     apiclient : APIClient = ctx.obj["client"]
     try:
         with console.status("[blue]", spinner="dots"):
-            response = apiclient.get("/demo/start")
+            response = apiclient.post("/demo/start")
             
             if response.get("status")=="Demo started successfully":
                 indexed=response.get("indexed")
@@ -70,7 +70,7 @@ def end(ctx):
     apiclient:APIClient=ctx.obj["client"]
     try:
         with console.status("[blue]", spinner="dots"):
-            response = apiclient.get("/demo/end")
+            response = apiclient.delete("/demo/end")
             if response.get("status")=="Demo ended succesfully":
                 console.print("[green]✓ Demo ended succesfully[/green]")
             else: 
