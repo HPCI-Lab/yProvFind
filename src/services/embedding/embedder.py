@@ -32,7 +32,7 @@ class EmbeddingService:
                     logger.info("Model downloaded successfully")
                     
             self.max_token_number = self.model.get_max_seq_length()
-            logger.info(type(self.max_token_number))
+            logger.info(f"Max token number for the embedding model {model_name}: {self.max_token_number}")
         except Exception as e:
             logger.critical(f"Cannot initialize embedding model: {e}")
             raise
