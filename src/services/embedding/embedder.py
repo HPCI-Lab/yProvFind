@@ -55,11 +55,10 @@ class EmbeddingService:
             try:
                 text = self._combine_fields(doc)
                 if text is None:
-                    logger.warning(f"Document {idx} skipped: all fields empty or invalid")
+                    logger.warning(f"Embedder: document {doc.get("_id")} skipped: all fields empty or invalid")
                     failed.append({
-                        "doc": doc,
-                        "error": "empty fields",
-                        "index": idx
+                        "doc": doc.get("_id"),
+                        "error": "Embedder: empty fields, creating an embedding is impossible"
                     })
                     continue
                 
@@ -77,9 +76,8 @@ class EmbeddingService:
             except Exception as e:
                 logger.error(f"Error combining fields for document {idx}: {e}")
                 failed.append({
-                    "doc": doc,
+                    "doc": doc.get("_id"),
                     "error": f"Field combination error: {str(e)}",
-                    "index": idx
                 })
         
         # Se non ci sono documenti validi, restituisci subito
@@ -104,9 +102,8 @@ class EmbeddingService:
             # Tutti i documenti validi diventano falliti
             for idx, doc, _ in valid_items:
                 failed.append({
-                    "doc": doc,
-                    "error": f"Embedding batch failed: {str(e)}",
-                    "index": idx
+                    "doc": doc.get("_id"),
+                    "error": f"Embedding entire batch failed: {str(e)}",
                 })
             return [], failed
         
@@ -124,9 +121,8 @@ class EmbeddingService:
             except Exception as e:
                 logger.error(f"Error assigning embedding to document {idx}: {e}")
                 failed.append({
-                    "doc": doc,
+                    "doc": doc.get("_id"),
                     "error": f"Embedding assignment error: {str(e)}",
-                    "index": idx
                 })
         
         logger.info(
@@ -148,6 +144,7 @@ class EmbeddingService:
         # Estrai e pulisci campi
         title = (src.get('title') or '').strip()
         description = (src.get('description') or '').strip()
+        llm_description = (src.get('llm_description') or '').strip()
         author = (src.get('author') or '').strip()
         
         # Gestisci keywords (può essere stringa o lista)
@@ -162,9 +159,11 @@ class EmbeddingService:
         # Costruisci testo finale
         parts = []
         if title:
-            parts.append(title)
+            parts.append(f"Title:{title}")
         if description:
-            parts.append(description)
+            parts.append(f"Description: {description}")
+        if llm_description:
+            parts.append(llm_description)
         if keywords_text:
             parts.append(f"Keywords: {keywords_text}")
         if author:

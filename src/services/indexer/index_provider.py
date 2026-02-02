@@ -11,7 +11,7 @@ logger =logging.getLogger(__name__)
 
     
 class IndexerProvider(Provider):
-    @provide(scope=Scope.REQUEST)
+    @provide(scope=Scope.APP)
     async def get_indexer(
         self,
         es_conn: "ElasticSearchConnection",

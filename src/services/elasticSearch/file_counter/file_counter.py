@@ -3,7 +3,7 @@ from typing import Dict
 from utils.error_handlers import safe_es_call
 from dishka import Provider, Scope, provide
 
-class FileCounter():
+class FileCounter:
     def __init__(self, es_conn: ElasticSearchConnection):
         self.es_conn = es_conn
         

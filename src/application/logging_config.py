@@ -1,10 +1,8 @@
 import logging
 from colorama import Fore, Style, init, Back
 
-# i loggher hanno una gerarchia ad albero, ad esempio il logger del file src/routers/root.py ha come nome "src.routers.root", il padre di questo logger e' "src.routers" e il padre di questo e' "src".
-# l'idea dei logger è avere un sistema centralizzato per la gestione dei log, in modo che ogni modulo o componente dell'applicazione possa avere il proprio logger con una configurazione specifica, ma che erediti alcune impostazioni comuni dal logger principale.
-# si possono anche rendere indipendenti scrivendo in get_logger logger.propagate = False
-init(autoreset=True) #per evitare problemi su altri OS
+
+init(autoreset=True) 
 
 
 # Definizione livello custom
@@ -47,17 +45,3 @@ def setup_logging(level=logging.INFO):
 
 
 
-
-
-""""" #Questo pezzo di codice serve per configurare il logging indipendente per ogni modulo e non centralizzato
-def get_logger(name=None):
-    logger = logging.getLogger(name)
-
-    if not logger.handlers:
-        handler = logging.StreamHandler()
-        handler.setFormatter(ColorFormatter('%(levelname)s | %(message)s'))
-        logger.addHandler(handler)
-        logger.setLevel(logging.DEBUG)
-    
-    return logger
-"""

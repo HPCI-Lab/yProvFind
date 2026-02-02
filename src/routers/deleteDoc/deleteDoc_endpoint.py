@@ -14,8 +14,8 @@ logger=logging.getLogger(__name__)
 
 
 delete_router = APIRouter(route_class=DishkaRoute,
-                         prefix="/documents",
-                         tags=["Documents"])
+                         prefix="/index/documents",
+                         tags=["Index manager"])
 
 
 
@@ -26,8 +26,8 @@ class DeleteAllDocsResponse(BaseModel):
     deleted: Optional[int] = Field(None, description="Elinated documents")
     failures: Optional[List[Any]] = Field(None, description="Errors during the process")
 
-@delete_router.delete("/all-doc-in-index",
-                      summary="Delete all files in an index",
+@delete_router.delete("/all",
+                      summary="Delete all documents in an index",
                       description="The endpoint provides a method to delete all indexed files in the designated index without deleting the index itself. This allows you to preserve the existing index mapping.",
                       response_model= DeleteAllDocsResponse
                       )

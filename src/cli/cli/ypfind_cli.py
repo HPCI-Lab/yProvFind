@@ -1,6 +1,6 @@
 import click
 from .utils.api_client import APIClient
-from .commands.cli_scraper import scraper
+from .commands.cli_indexing_process import indexing_process
 from .commands.cli_registry import registry
 from .commands.cli_search import search
 from .commands.cli_timestamp import tmstamp
@@ -25,7 +25,7 @@ def cli(ctx, url: str, timeout: int):
     ctx.ensure_object(dict)
     ctx.obj["client"] = APIClient(url, timeout)
 
-cli.add_command(scraper)
+cli.add_command(indexing_process)
 cli.add_command(registry)
 cli.add_command(search)
 cli.add_command(tmstamp)

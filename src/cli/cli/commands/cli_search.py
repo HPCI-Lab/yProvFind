@@ -198,25 +198,28 @@ def _display_results(results: list, query: str):
         author = source.get('author', 'Unknown')
         date_created = source.get('dateCreated', 'N/A')
         version = source.get('version', 'N/A')
+        llm_description = source.get('llm_description', 'N/A')
+        
         
         # Tronca descrizione se troppo lunga
         if description:
-            if len(description) > 150:
-                description = description[:147] + "..."
+            if len(description) > 200:
+                description = description[:197] + "..."
         
         # Crea un pannello per ogni risultato
         content = f"""[bold cyan]Title:[/bold cyan] {title}
+        [bold cyan]PID:[/bold cyan] {doc_id}
+        [bold cyan]description:[/bold cyan] {description}
         [bold cyan]Author:[/bold cyan] {author}
         [bold cyan]Date:[/bold cyan] {date_created}
         [bold cyan]Version:[/bold cyan] {version}
         [bold cyan]Score:[/bold cyan] {score:.4f}
-
-        [dim]{description}[/dim]"""
+        [bold cyan]llm_description:[/bold cyan] {llm_description}
+        """
         
         panel = Panel(
             content,
             title=f"[bold white]Result {i}[/bold white]",
-            subtitle=f"[dim]ID: {doc_id}[/dim]",
             border_style="blue"
         )
         console.print(panel)

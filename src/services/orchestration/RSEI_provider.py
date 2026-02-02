@@ -8,6 +8,7 @@ from services.orchestration.RSEI_controller import RSEIController
 from services.orchestration.last_check_timestamp import TimestampManager
 from services.stac_catalog.STAC_manager import STACManager
 from services.orchestration.RSEI_status import RSEIStatus
+from services.metadata_enricher.meta_enricher import MetaEnricher
 
 
 class RSEIStatusProvider(Provider):
@@ -17,7 +18,7 @@ class RSEIStatusProvider(Provider):
 
 
 class RSEIProvider(Provider): 
-    @provide(scope=Scope.REQUEST)
+    @provide(scope=Scope.APP)
     def RSEI_provider(  
         self,
         es_conn: ElasticSearchConnection,
@@ -27,7 +28,9 @@ class RSEIProvider(Provider):
         registry: RegistryService,
         timestamp: TimestampManager,
         STACManager: STACManager,
-        RSEI_status: RSEIStatus  
+        RSEI_status: RSEIStatus,
+        enricher: MetaEnricher
+        
     ) -> RSEIController:
         return RSEIController(
             es_conn, 
@@ -37,5 +40,6 @@ class RSEIProvider(Provider):
             registry, 
             timestamp,
             STACManager, 
-            RSEI_status
+            RSEI_status,
+            enricher
         )

@@ -103,15 +103,34 @@ class TimestampManager:
                         "removed:": address}
             else:
                 raise HTTPException(status_code=400, detail="address not in list, address removal impossible")
-            
-        except HTTPException:
-            raise
         except Exception as e:
             raise HTTPException(status_code=500, detail=f"internal error during the deletion of {address}")
         
 
             
-    #def modify_address_timestamp(self, address:str):
+    def update_timestmap(self, address:str, time:str):
+        try:
+            # 1. CARICA dati esistenti
+            existing_data = {}
+            if self.file_path.exists() and self.file_path.stat().st_size > 0:
+                try:
+                    with open(self.file_path, 'r') as f:
+                        existing_data = json.load(f) #load fallisce se il file è vuoto
+                except json.JSONDecodeError: #se il file è vuoto o corrotto ritorna un file vuoto
+                    existing_data = {}
+            
+            # 2. AGGIORNA solo questo address
+            existing_data[address] = time
+            
+            # 3. SALVA tutto
+            with open(self.file_path, 'w') as f:
+                json.dump(existing_data, f, indent=2)
+                
+            logger.notice(f"Timestamp aggiornato per {address}: {time}")
+            return {f"New Timestamp for {address} :  {time}"}
+        except Exception as e:
+            logger.error(f"Errore salvataggio timestamp: {e}")
+            raise HTTPException(status_code=500, detail={f"internal error during the timestamp update of {address}"})
         
 
 

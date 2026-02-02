@@ -142,6 +142,9 @@ class ElasticSearchConnection: #classe per gestire la connessione a elasticsearc
                 "description": {
                     "type": "text"
                 },
+                "llm_description":{
+                    "type": "text"
+                },
                 "keywords": {
                     "type": "text",
                     "fields": {

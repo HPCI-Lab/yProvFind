@@ -20,26 +20,26 @@ logger = logging.getLogger(__name__)
 scheduler = AsyncIOScheduler()
 
 def create_lifespan(container):
-    async def _run_sfei_init():
-        
+
+    async def _run_rsei_init():
         async with container() as request_container:
             try:
-                SFEI_controller = await request_container.get(RSEIController)
-                await SFEI_controller.SFEI_init()
-                logger.info("SFEI process successfully completed")
+                RSEI_controller = await request_container.get(RSEIController)
+                await RSEI_controller.RSEI_init()
+                logger.info("RSEI process successfully completed")
             except Exception as e:
                 logger.exception(f"An error occurred during the SFEI process: {e}")
     
     async def _starter():
-        """Esegue setup iniziale completo (solo all'avvio)"""
+        """Performs full initial setup (startup only)"""
         async with container() as request_container:
             try:
                 await request_container.get(ElasticSearchConnection)
-                SFEI_controller = await request_container.get(RSEIController)
-                await SFEI_controller.SFEI_init()
+                #RSEI_controller = await request_container.get(RSEIController)
+                #await RSEI_controller.RSEI_init()
                 logger.info("Starter successfully completed ")
             except Exception as e:
-                logger.exception(f"Errore nello starter: {e}")
+                logger.exception(f"Starter failed {e}")
     
     @asynccontextmanager
     async def lifespan(app: FastAPI):
@@ -51,11 +51,11 @@ def create_lifespan(container):
         
         # Schedula solo SFEI_init (senza ElasticSearch check) ogni 4 ore
         scheduler.add_job(
-            _run_sfei_init,
+            _run_rsei_init,
             'interval',
             hours=settings.SCHEDULER_INTERVAL_HOURS,
             #minutes=2,  # per test
-            id='sfei_init_job',
+            id='rsei_init_job',
             replace_existing=True
         )
         
@@ -77,7 +77,7 @@ def get_app():
     app = FastAPI(
         title="yProvFind",
         description="Federated Index and Discovery - yProv Provenance Lookup Service",
-        version="1.0.0",
+        version="2.0.0",
         lifespan=create_lifespan(container)
     )
     app.include_router(root_routes)

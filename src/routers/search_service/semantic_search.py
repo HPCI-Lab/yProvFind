@@ -53,7 +53,7 @@ async def semantic_search_endpoint(semantic: Annotated[SemanticSearch, FromDishk
 
 
 
-@semantic_query_router.get("/semantic-fulltext",
+@semantic_query_router.get("/hybrid",
                             response_model=List[SemanticSearchResponse],
                             summary="Combines semantic search with full-text search",
                             description="Hybrid search in Elasticsearch combines full-text matching and semantic vector " \
@@ -98,4 +98,4 @@ async def knn_multiMatch_endpoint(  semantic: Annotated[SemanticSearch, FromDish
         "version": version,
         "yProvIstance": yProvIstance,
     }
-    return await semantic.knn_MultiMatch_search(query, filters, other_versions)
+    return await semantic.knn_MultiMatch_search(query=query, addFilters=filters, include_all_versions= other_versions, size=page_size)

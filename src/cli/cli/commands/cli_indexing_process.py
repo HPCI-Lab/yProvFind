@@ -4,11 +4,11 @@ from ..utils.api_client import APIClient, APIError, APIHTTPError, APIConnectionE
 from rich.console import Console
 from rich.table import Table
 from rich.progress import Progress, SpinnerColumn, TextColumn, BarColumn, TaskProgressColumn
-
+from typing import Dict
 console = Console()
 
 @click.group()
-def scraper():
+def indexing_process():
     "start the indexing and monitoring process"
     pass
 
@@ -27,7 +27,7 @@ def scraper():
     help='Start process and exit without waiting for completion'
 )
 @click.pass_context
-def start_index(ctx, poll_interval: int, no_wait: bool):
+def start(ctx, poll_interval: int, no_wait: bool):
     """
     Starts the full indexing process.
     
@@ -42,7 +42,7 @@ def start_index(ctx, poll_interval: int, no_wait: bool):
     try:
         # Start the process
         console.print("[blue]Starting indexing process...[/blue]")
-        start_response = api_client.post("/fetch/start")
+        start_response = api_client.post("/indexing-process/start")
         
         console.print(f"[green]✓ {start_response.get('message', 'Process started')}[/green]")
         
@@ -79,11 +79,11 @@ def start_index(ctx, poll_interval: int, no_wait: bool):
     except APIError as e:
         console.print(f"\n[red]✗ Error: {str(e)}[/red]")
         raise click.Abort()
-scraper.add_command(start_index)
+indexing_process.add_command(start)
 
 @click.command()
 @click.pass_context
-def index_status(ctx):
+def status(ctx):
     """
     Check the status of the current indexing process.
     
@@ -93,7 +93,7 @@ def index_status(ctx):
     api_client: APIClient = ctx.obj["client"]
     
     try:
-        response = api_client.get("/fetch/status")
+        response = api_client.get("/indexing-process/status")
         _display_status(response)
         
     except APIHTTPError as e:
@@ -108,11 +108,11 @@ def index_status(ctx):
     except APIError as e:
         console.print(f"\n[red]✗ Error: {str(e)}[/red]")
         raise click.Abort()
-scraper.add_command(index_status)
+indexing_process.add_command(status)
 
 @click.command()
 @click.pass_context
-def reset_index(ctx):
+def status_reset(ctx):
     """
     Reset the indexing process status.
     
@@ -126,7 +126,7 @@ def reset_index(ctx):
         return
     
     try:
-        response = api_client.post("/fetch/reset")
+        response = api_client.post("/indexing-process/reset")
         console.print(f"[green]✓ {response.get('message', 'Status reset')}[/green]")
         
     except APIHTTPError as e:
@@ -139,7 +139,54 @@ def reset_index(ctx):
     except APIError as e:
         console.print(f"\n[red]✗ Error: {str(e)}[/red]")
         raise click.Abort()
-scraper.add_command(reset_index)
+indexing_process.add_command(status_reset)
+
+
+@click.command()
+@click.pass_context
+def abort(ctx):
+    """
+    Terminate the idexing process 
+    """
+    api_client:APIClient = ctx.obj["client"]
+
+    try: 
+        response = api_client.get("/indexing-process/abort")
+        console.print(f"[yellow] {response.get('message')}[/yellow]")
+
+    except APIHTTPError as e:
+        if e.status_code == 409:
+            console.print(f"\n[yellow]⚠ {e.detail}[/yellow]")
+        else:
+            console.print(f"\n[red]✗ Error {e.status_code}: {e.detail}[/red]")
+        raise click.Abort()
+    except APIError as e:
+        console.print(f"\n[red]✗ Error: {str(e)}[/red]")
+        raise click.Abort()
+    
+indexing_process.add_command(abort)
+
+
+@click.command()
+@click.pass_context
+def errors(ctx):
+    """List all the errors occurred during the process."""
+    api_client:APIClient = ctx.obj["client"]
+    try:
+        response:Dict = api_client.get("/indexing-process/errors")
+        for k, v in response.items():
+            console.print(f"[blue]\n\n{k}:[/blue]")
+            for s in v:
+                console.print(f"  - {s}")
+    except APIHTTPError as e:
+        console.print(f"\n[red]✗ Error {e.status_code}: {e.detail}[/red]")
+        raise click.Abort()
+    except APIError as e:
+        console.print(f"\n[red]✗ Error: {str(e)}[/red]")
+        raise click.Abort()
+indexing_process.add_command(errors)
+
+
 
 def _monitor_process(api_client: APIClient, poll_interval: int):
     """Monitor the process until completion with live updates"""
@@ -158,7 +205,7 @@ def _monitor_process(api_client: APIClient, poll_interval: int):
         
         while True:
             try:
-                status_response = api_client.get("/fetch/status")
+                status_response = api_client.get("/indexing-process/status")
                 status = status_response.get("status", "unknown")
                 details = status_response.get("details", "")
                 
@@ -180,6 +227,20 @@ def _monitor_process(api_client: APIClient, poll_interval: int):
                 progress.stop()
                 console.print(f"\n[red]✗ Error checking status: {str(e)}[/red]")
                 raise click.Abort()
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 def _display_status(result: dict):

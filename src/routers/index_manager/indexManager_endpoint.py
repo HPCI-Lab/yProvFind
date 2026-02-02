@@ -7,7 +7,7 @@ from pydantic import BaseModel, Field
 from services.orchestration.last_check_timestamp import TimestampManager
 
 index_manager_router = APIRouter( route_class=DishkaRoute,
-                                 prefix = "",
+                                 prefix = "/index",
                                  tags=["Index manager"]
                                 )
 
@@ -74,6 +74,9 @@ DOCUMENT_MAPPING_EXAMPLE = {
                 "description": {
                     "type": "text"
                 },
+                "llm_description":{
+                    "type": "text"
+                },
                 "keywords": {
                     "type": "text",
                     "fields": {
@@ -115,7 +118,7 @@ DOCUMENT_MAPPING_EXAMPLE = {
             }
 
 
-@index_manager_router.post("/create-index")
+@index_manager_router.post("/create")
 async def create_index(index_creator: Annotated[CreateIndex, FromDishka()],
                        index_name: Annotated[str, Query(example="documents")],  
                        mapping: Annotated[Dict, Body(example=DOCUMENT_MAPPING_EXAMPLE)]
@@ -128,8 +131,8 @@ class DeleteIndexResponse(BaseModel):
     status: str =Field(..., description="Status of the operation", example="success")
     index: str = Field (..., description="Index name")    
 
-@index_manager_router.delete("/delete-index",
-                      summary="Complete elimination of the index",
+@index_manager_router.delete("/delete",
+                      summary="Delete index",
                       description="Completely deletes the index passed as a parameter, including the files inside it and its mapping. If delete timestamp is true all the timestamp for each address is deleted",
                       response_model=DeleteIndexResponse
                       )

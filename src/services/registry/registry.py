@@ -13,19 +13,20 @@ logger = logging.getLogger(__name__)
 class RegistryService(): 
     """
         Il registry gestisce la lista di indirizzi yPorvStore, la lista viene salvata anche in memoria 
-        il salvataggio su disco è sincrono, le operazioni su liste piccole impiegano troppo poco per avere un vantaggio usando async
+        
     """
     def __init__ (self):
         self.timeout = 5.0
         self.active_list: List[str] = []
-        #self.all_list: List[str]= []
         self.all_dict_list: Dict[str,Dict]={}
                 
         self.name_file : str = settings.REGISTRY_FILE_NAME
         self.data_dir = Path(settings.REGISTRY_BASE_PATH)
-        self.data_dir.mkdir(parents=True, exist_ok=True)#se esiste non solleva eccezioni, se no la crea
+        self.data_dir.mkdir(parents=True, exist_ok=True)
         self.complete_path = self.data_dir / self.name_file
         self.all_dict_list= self._list_load()
+
+        self.client= httpx.AsyncClient()
 
         #logger.info(f"Path assoluto file registry: {self.complete_path.resolve()}")
         #logger.info(f"Directory corrente: {Path.cwd()}")
@@ -33,6 +34,7 @@ class RegistryService():
         
 
     async def update_active_list(self) -> List[str]:
+        """Return the list of active addresses after the healt check for each one"""
         try:
             await self.check_avaibility()
             return self.active_list
@@ -41,12 +43,14 @@ class RegistryService():
     
 
     def get_active_list(self)->List[str]:
+        """Return the last active addresses list without healt check"""
         try:
             return self.active_list
         except Exception as e: 
             raise HTTPException(status_code=500, detail=f"Registry internal error: {str(e)}")
     
     def get_all_list(self)->Dict[str, Dict]:
+        """Return all the addresses saved"""
         try:
             return self.all_dict_list
         except Exception as e: 
@@ -55,6 +59,7 @@ class RegistryService():
 
 
     async def check_avaibility(self):
+        """For each address saved check if is active"""
         self.active_list=[]
         
         tasks= [self.health_check(address)
@@ -77,17 +82,17 @@ class RegistryService():
 
 
     async def health_check(self, address: str)-> bool:
+        """healt check for one yProvStore address"""
         try:
-            async with httpx.AsyncClient(timeout=self.timeout) as client:
-                response = await client.get(f"{address}/status")
+            response = await self.client.get(f"{address}/status")
 
-                if response.status_code==200:
-                    message = response.json()
-                    if message.get("status")=="ok":
-                        return True
-                logger.debug(f"status:{address} - Status: {response.status_code} ")
+            if response.status_code==200:
+                message = response.json()
+                if message.get("status")=="ok":
+                    return True
+            logger.debug(f"status:{address} - Status: {response.status_code} ")
 
-                return False
+            return False
 
         except httpx.TimeoutException:
             logger.debug(f" {address} - TIMEOUT")
@@ -102,6 +107,7 @@ class RegistryService():
 
 
     def update_address_list(self, address: str, other_info: Optional[Dict]=None):
+        """Add new address"""
         try:
             normalized_address = address.rstrip('/')
             if len(normalized_address)>2048:
@@ -141,6 +147,7 @@ class RegistryService():
 
 
     def _list_load(self) -> Dict[str, Dict]:
+    
         try:
             if self.complete_path.exists():
                 with open(self.complete_path, 'r', encoding='utf-8') as f:
@@ -163,32 +170,8 @@ class RegistryService():
             return {}
 
 
-    """
-    def _save_addresses(self, addresses: Dict[str, Dict] = None):
-        if addresses is None:
-            addresses = self.all_list
-            
-        try:
-            # Scrittura atomica: scrivi su file temporaneo poi rinomina
-            temp_file = self.complete_path.with_suffix('.tmp')
-            
-            with open(temp_file, 'w', encoding='utf-8') as f:
-                json.dump(addresses, f, indent=2, ensure_ascii=False)
-                f.flush()
-                os.fsync(f.fileno())  # Forza scrittura su disco
-            
-            # Rename atomico (su Linux/Unix è atomico)
-            temp_file.replace(self.complete_path)
-            
-            logger.info(f"Saved {len(addresses)} addresses on {self.complete_path}")
-            
-        except Exception as e:
-            logger.error(f"Registry error while saving address list: {e}")
-            raise
-    """
-
     def _save_addresses(self):
-        """Salva il dizionario con atomic write"""
+        """Save the addresses on memory with atomic write"""
         try:
             temp_file = self.complete_path.with_suffix('.tmp')
             
@@ -206,6 +189,7 @@ class RegistryService():
 
 
     def delete_address(self, address: str):
+        """Delete one address from memory"""
         try:
             # Normalizza l'indirizzo
             normalized_address = address.rstrip('/')
@@ -258,4 +242,5 @@ class RegistryService():
 
                 
 
-
+    async def close(self):
+        await self.client.aclose()

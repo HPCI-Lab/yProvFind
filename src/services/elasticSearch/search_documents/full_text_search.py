@@ -36,7 +36,7 @@ class FullTextSearch:
                             # Match esatto (alta priorità)
                             "multi_match": {
                                 "query": query,
-                                "fields": ["title^3", "description", "keywords^2", "author", "pid"],
+                                "fields": ["title^2", "description", "keywords", "author^2", "pid", "llm_description^0.8"],
                                 "type": "cross_fields",
                             }
                         },
@@ -44,7 +44,7 @@ class FullTextSearch:
                             # Match parziale su ngram (bassa priorità)
                             "multi_match": {
                                 "query": query,
-                                "fields": ["title.ngram^1", "keywords.ngram^0.5"],
+                                "fields": ["title.ngram^1", "keywords.ngram^0.8"],
                                 "type": "best_fields"
                             }
                         }

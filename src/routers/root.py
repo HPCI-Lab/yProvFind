@@ -2,14 +2,14 @@ from fastapi import APIRouter
 import logging
 from dishka.integrations.fastapi import DishkaRoute
 from fastapi.responses import RedirectResponse
-from .searchDoc.full_text_search import query_router
+from .search_service.full_text_search import query_router
 from .deleteDoc.deleteDoc_endpoint import delete_router
-from .scraper.scraper_endpoint import scraper_router
-from .searchDoc.semantic_search import semantic_query_router
-from .searchDoc.all_search import get_all_router
+from .indexing_process.indexing_process_endpoint import indexing_process
+from .search_service.semantic_search import semantic_query_router
+from .search_service.all_search import get_all_router
 from .index_manager.indexManager_endpoint import index_manager_router
 from .registry.registry_endpoint import registry_router
-from .timestamp_manager.timestamp_manager import timestamp_router
+from .timestamp_manager.timestamp_endpoint import timestamp_router
 from .demo.demo_endpoint import demo_router
 from .file_counter.file_counter_endpoint import counter_router
 __all__ = ('root_routes',) #scrivere questo serve perche dice cosa esportare qunado si scrive from root import *. In questo caso esporta solo root_routes
@@ -25,7 +25,7 @@ root_routes = APIRouter(route_class=DishkaRoute)
 all_routes : tuple [APIRouter,...] = (
                     query_router,
                     delete_router,
-                    scraper_router,
+                    indexing_process,
                     semantic_query_router,
                     get_all_router,
                     index_manager_router,

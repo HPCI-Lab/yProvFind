@@ -9,10 +9,10 @@ logger =logging.getLogger(__name__)
 
 
 class ScraperProvider(Provider):
-    @provide(scope=Scope.REQUEST)
-    async def fetch_all(self) -> AsyncIterator[ScraperService]:
-        fetcher = ScraperService()
+    @provide(scope=Scope.APP)
+    async def start_scraper(self) -> AsyncIterator[ScraperService]:
+        scraper = ScraperService()
         try:
-            yield fetcher
+            yield scraper
         finally:
-            await fetcher.close()
+            await scraper.close()

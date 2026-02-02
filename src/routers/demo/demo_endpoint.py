@@ -10,10 +10,10 @@ demo_router= APIRouter(route_class=DishkaRoute,
                        tags= ["Demo"])
 
 
-@demo_router.get("/start", description="start the demo and load some example files in order to try yProvFind")
+@demo_router.post("/start", description="start the demo and load some example files in order to try yProvFind")
 async def stat_demo(demo : Annotated[Demo, FromDishka()]):
     return await demo.start_demo()
 
-@demo_router.get("/end", description="end the demo and delete the examples files")
+@demo_router.delete("/end", description="end the demo and delete the examples files")
 async def end_demo(demo : Annotated[Demo, FromDishka()]):
     return await demo.end_demo()

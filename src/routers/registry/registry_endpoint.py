@@ -36,14 +36,7 @@ class AddressInput(BaseModel):
         # Controlla che abbia un hostname valido
         if not parsed.netloc:
             raise ValueError('URL must have a valid hostname')
-        
 
-        """"
-        #bloccare l'host locale
-        blocked_hosts = ['localhost', '127.0.0.1', '0.0.0.0']
-        if parsed.netloc.split(':')[0] in blocked_hosts:
-            raise ValueError('Non è possibile usare localhost')
-        """
 
 
         return url_str
@@ -66,13 +59,10 @@ def get_all_addresses_list(registry: Annotated[RegistryService, FromDishka()]):
     return registry.get_all_list()
 
 
-@registry_router.get("/get-active-addresses", description="Returns the list of active addresses")
-def get_active_addresses_list(registry: Annotated[RegistryService, FromDishka()]):
-    return registry.get_active_list()
 
 
-@registry_router.get("/get-update-active-addresses", description="Checks for active addresses, updates the list of active addresses, returns the updated list")
-async def update_addresses_list(registry: Annotated[RegistryService, FromDishka()]):
+@registry_router.get("/get-active-addresses", description="Checks for active addresses, returns the updated active addresses list")
+async def get_active_list(registry: Annotated[RegistryService, FromDishka()]):
     return await registry.update_active_list()
     
 

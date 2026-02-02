@@ -5,40 +5,44 @@ import asyncio
 
 class RSEIStatus:
     def __init__(self):
-        # Initialize all attributes with default values
         self._status: str = "idle"
         self._details: str = ""
-        self._ES_successfully_indexed: int = 0  # ← Fixed: int not str
-        self._ES_error_count: int = 0  # ← Fixed: int not str
-        self._embed_success: int = 0  # ← Fixed: int not str
-        self._embed_error: int = 0  # ← Fixed: int not str
+        self._ES_successfully_indexed: int = 0 
+        self._ES_error_count: int = 0  
+        self._embed_success: int = 0 
+        self._embed_error: int = 0 
+        self._process_total_errors:int=0
         self._started_at: Optional[str] = None
         self._completed_at: Optional[str] = None
-        self._lock = asyncio.Lock()  # ← CRITICAL: This was missing!
+        self._lock = asyncio.Lock()  
 
     @property
     def status(self) -> str:
-        return self._status  # ← Fixed: was returning self.status (infinite recursion!)
+        return self._status  
 
     @property
     def details(self) -> str:
         return self._details
     
     @property
-    def ES_successfully_indexed(self) -> int:  # ← Fixed: return type int not str
+    def ES_successfully_indexed(self) -> int:  
         return self._ES_successfully_indexed
     
     @property
-    def ES_error_count(self) -> int:  # ← Fixed: return type int not str
+    def ES_error_count(self) -> int:  
         return self._ES_error_count
 
     @property
-    def embed_success(self) -> int:  # ← Fixed: return type int not str
+    def embed_success(self) -> int: 
         return self._embed_success
     
     @property
-    def embed_error(self) -> int:  # ← Fixed: return type int not str
+    def embed_error(self) -> int:  
         return self._embed_error
+    
+    @property
+    def process_tot_errors(self) -> int:  
+        return self._process_total_errors
     
     @property
     def started_at(self) -> Optional[str]:
@@ -74,7 +78,8 @@ class RSEIStatus:
         es_indexed: int,
         es_errors: int,
         embed_success: int,
-        embed_errors: int
+        embed_errors: int,
+        process_tot_errors:int
     ):
         """Update all counters"""
         async with self._lock:
@@ -82,6 +87,7 @@ class RSEIStatus:
             self._ES_error_count = es_errors
             self._embed_success = embed_success
             self._embed_error = embed_errors
+            self._process_total_errors= process_tot_errors
     
     async def complete_process(
         self,
@@ -89,6 +95,7 @@ class RSEIStatus:
         es_errors: int,
         embed_success: int,
         embed_errors: int,
+        process_tot_errrors: int,
         details: str = "Process completed successfully"
     ):
         """Mark process as completed"""
@@ -99,6 +106,7 @@ class RSEIStatus:
             self._ES_error_count = es_errors
             self._embed_success = embed_success
             self._embed_error = embed_errors
+            self._process_total_errors= process_tot_errrors
             self._completed_at = datetime.now().isoformat()
     
     async def interrupt_process(self, reason: str):
@@ -114,7 +122,8 @@ class RSEIStatus:
         es_indexed: int,
         es_errors: int,
         embed_success: int,
-        embed_errors: int
+        embed_errors: int,
+        process_tot_errors: int
     ):
         """Mark process as failed"""
         async with self._lock:
@@ -124,6 +133,7 @@ class RSEIStatus:
             self._ES_error_count = es_errors
             self._embed_success = embed_success
             self._embed_error = embed_errors
+            self._process_total_errors= process_tot_errors
             self._completed_at = datetime.now().isoformat()
     
     async def reset(self):
@@ -135,6 +145,7 @@ class RSEIStatus:
             self._ES_error_count = 0
             self._embed_success = 0
             self._embed_error = 0
+            self._process_total_errors = 0
             self._started_at = None
             self._completed_at = None
     
@@ -147,6 +158,7 @@ class RSEIStatus:
             "ES_error_count": self._ES_error_count,
             "embed_success": self._embed_success,
             "embed_error": self._embed_error,
+            "process_total_errors": self._process_total_errors,
             "started_at": self._started_at,
             "completed_at": self._completed_at
         }

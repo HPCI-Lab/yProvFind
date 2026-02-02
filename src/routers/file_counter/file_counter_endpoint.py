@@ -12,6 +12,7 @@ counter_router= APIRouter(prefix="/counter",
 
 @counter_router.get("/per-country")
 async def country_count(counter: Annotated[FileCounter, FromDishka()]):
+    """Return the number of indexed files for each address"""
     response = await counter.count_by_country()
     return response
 

@@ -15,9 +15,9 @@ logger =logging.getLogger(__name__)
 
 
 class IndexService():
-    def __init__(self, es_conn: ElasticSearchConnection, fetcher: ScraperService, embedder: EmbeddingService):
+    def __init__(self, es_conn: ElasticSearchConnection, scraper: ScraperService, embedder: EmbeddingService):
         self.es_conn=es_conn
-        self.fetcher=fetcher #il fetcher restituisce un generatore (iteratore)
+        self.scraper=scraper #il fetcher restituisce un generatore (iteratore)
         self.embedder= embedder
 
 
@@ -33,7 +33,7 @@ class IndexService():
             return success, errors
         except Exception as e:
             logger.error(f"Indexer: failed to index with async_bulk: {e}")
-            return 0, [{"error": str(e)} for _ in enriched_batch]                     
+            return 0, [{"doc":doc.get("_id"), "error": str(e)} for doc in enriched_batch]                     
         
 
 
