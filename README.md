@@ -11,7 +11,7 @@
   - [Use the cli in the docker container](#use-the-cli-in-the-docker-container)
   - [Install the CLI for remote use](#install-the-cli-for-remote-use)
   - [How to use](#how-to-use)
-  - [All command desription](#All-command-desription)
+  - [All command desription](#all-command-desription)
 
 
 ## **Overview**
@@ -22,9 +22,6 @@ The system allows provenance search through **structured metadata** (title, desc
 * **Semantic search**, supported by an *embedding model* that merges the title, description, and keywords fields to capture conceptual relationships between contents.
 
 The architecture is built with **FastAPI** (running on *Uvicorn*), exposing REST endpoints to interact with the search engine.
-
-Moreover, **yProvFind** will be able to maintain an up-to-date **STAC (SpatioTemporal Asset Catalog)** containing all indexed provenance records, enabling integration and federation with external services.
-This functionality is currently under development.
 
 * ### **Search methods**
 
@@ -62,21 +59,35 @@ The setup consists of two containers:
 
 #### **2. Create the .env file**
 
-Before starting the containers, you **must** create a `.env` file in the root directory of the project. This file contains the credentials needed to connect the `yProvFind` container to Elasticsearch.
 
-**Important:** At first startup, Elasticsearch sets the username and password based on the values in this file. If the `.env` file is not created beforehand, Elasticsearch will generate random credentials automatically, making the connection impossible.
+Before deploying the containers, you **must** configure your environment variables. The system relies on a `.env` file located in the project root to establish secure connections with Elastisearch and for call the llm.
 
-Create a file named `.env` in the project root with the following content:
+* **Step 1: Create the .env file**
+
+You will find a `.env.example` file in the root directory. Use it as a template to create your `.env` file:
+
+
+* **Step 2: Define Elasticsearch and Groq credentials**
+
+Open the newly created `.env` file and set your credentials:
 
 ```env
-ELASTICSEARCH_URL=http://localhost:9200
+# Elasticsearch Configuration
+ELASTIC_PASSWORD=your_secure_password_here
 ES_USER=elastic
-ES_PASSWORD=password
+ELASTICSEARCH_URL=http://localhost:9200
+GROQ_API_KEY=your_api_key
 ```
 
-> **Note:** You can customize the `ES_USER` and `ES_PASSWORD` value for better security. 
+> [!CAUTION]
+> **CRITICAL - FIRST STARTUP ONLY:**
+> Elasticsearch initializes its security settings and credentials **only during the first execution** based on the values provided in this file.
+> * **If the `.env` file is missing:** Elasticsearch will generate a random password, and the application will fail to connect.
+> * **If you change the password later:** You must manually update it within the Elasticsearch container or reset the volume.
+> 
+> 
 
-
+>Note: In orther to use the llm you need an apy key from Groq. The used llm is free but has some limitation, you can adjust the call frequency from the API of yProvFind to avoid limitation errors 
 
 #### **3. Build the images**
 
@@ -108,16 +119,8 @@ Once running, **yProvFind** will expose its **FastAPI** endpoints (check the `do
 #### **5. Access the API docs:**
 Open http://localhost:8002/docs in your browser.
 
-#### **6. Access the CLI**
 
-Once **yprovfind** is fully started, you can interact with it directly from any terminal on your machine.  
-To view all available commands, run:
-
-```bash
-docker exec yprovfind ypfind --help
-```
-
-#### **7. Stop and clean up**
+#### **6. Stop and clean up**
 
 To stop and remove all running containers, networks, and temporary data:
 
@@ -129,18 +132,25 @@ docker compose down
 
 
 ## **yProvFind CLI**
-
+  abort         Terminate the idexing process
+  errors        List all the errors occurred during the process.
+  start         Start the indexing and semantic enrichment process.
+  status        Check the status of the current indexing process.
+  status-reset  Reset the indexing process status.
 * ### **All commands**
 ```
-ypfind scraper start-index
-ypfind scraper index-status
-ypfind scraper reset-index
+ypfind indexing-process start [--batch-delay <sec>] [--batch-size <int>] [--enrich / --no-enrich] [--no-wait] [--poll-interval <int>]
+ypfind indexing-process status
+ypfind indexing-process status-reset
+ypfind indexing-process errors
+ypfind indexing-process abort
 ypfind registry list 
 ypfind registry add <address>
 ypfind registry delete <address>
 ypfind search <query> [--date-from <DD-MM-YYYY>]  [--date-to <DD-MM-YYYY>] [--version <version_number>] [--instance <url>] [--other-versions / --no-other-versions] [--limit <page_size>]
 ypfind tmstamp list
-ypfind tmstamp delete <address>
+ypfind tmstamp delete-all
+ypfind tmstamp update [--address TEXT] [--data TEXT]
 ypfind demo start
 ypfind demo end
 
@@ -149,7 +159,7 @@ ypfind demo end
 
 
 * ### **Use the cli in the docker container**
-The command-line interface is installed automatically inside the **yprovfind** container.
+The command-line interface is also installed automatically inside the **yprovfind** container.
 To use it, all commands must be prefixed with:
 
 ```
@@ -238,42 +248,53 @@ ypfind --help
 This component handles the indexing of provenance metadata coming from all active **yProvStore** instances registered in the system.
 For each instance, the scraper reads the last stored timestamp (the time of the last successful query) and retrieves only new or updated records since that point.
 
-You can start the indexing process, monitor its status, and reset the stored progress using the following commands:
+You can start or stop the indexing process, monitor or reset its status and see the errors occourred during the procecess using the following commands:
 
 ```
-ypfind scraper start-index
-ypfind scraper index-status
-ypfind scraper reset-index
+ypfind indexing-process start [--batch-delay <sec>] [--batch-size <int>] [--enrich / --no-enrich] [--no-wait] [--poll-interval <int>]
+ypfind indexing-process status
+ypfind indexing-process status-reset
+ypfind indexing-process errors
+ypfind indexing-process abort
 ```
 
-**start-index**
+**Start:**
+
 Starts the full indexing process.
 By default, it waits until completion and displays progress.
 If you need it to run in background without waiting, use the option:
 
 ```
-ypfind scraper start-index --no-wait
+ypfind indexing-process start --no-wait
 ```
 
 You can also adjust the polling frequency using:
 
 ```
-ypfind scraper start-index --poll-interval <seconds>
+ypfind indexing-process start --poll-interval <seconds>
+```
+If you are using the free version of the llm offered by Groq you need some constraint like a delay between batches and reduce the number of elements in a single batch
+```
+ypfind indexing-process start --batch-delay <sec> --batch-size <int>
 ```
 
----
+**Status**
 
-**index-status**
 Shows the current progress and status of the indexing operation.
 Useful to check whether the process is still active or already completed.
 
----
 
-**reset-index**
+**Reset**
+
 Resets the saved indexing status.
 Use this if you want to delete the status information remains after a completed process.
 
----
+
+
+**Abort**
+
+It is possible to abort the process at any time using the dedicated abort endpoint. When called, the porcess terminates and the status will indicate that it was stopped by the user after the current batch was completed.
+
 
 
 #### **3. Registry**
@@ -369,8 +390,7 @@ ypfind search "climate change" --other-versions
 ```
 
 
-> **Note:** You can search directly the documents PID, but in this case the full-text search and hybrid search are the recommended ones to use as they check for the exact match.
-
+> **Note:** You can search directly the documents PID, but in this case the semantic search is not recomended because it doesn't use the perfect match.
 
 #### **5. Timestamp**
 
@@ -381,17 +401,17 @@ You can manage timestamps through the CLI:
 
 ```
 ypfind tmstamp list
-ypfind tmstamp delete <address>
+ypfind tmstamp delete-all
+ypfind tmstamp update [--address TEXT] [--data TEXT]
 ```
 
 
 * **list** — returns all registered yProvStore addresses along with their last update timestamp:
 
 
-* **delete** — removes all stored timestamps for all yProvStore addresses, effectively forcing a full re-index on the next run:
+* **delete-all** — removes all stored timestamps for all yProvStore addresses, effectively forcing a full re-index on the next run:
 
-
-
+* **update** — updates the timestamp of one address, it is necessary use the ISO format "YYYY-MM-DDThh:mm:ss"
 
 #### **6. Demo Mode**
 
@@ -415,6 +435,7 @@ You can manage the demo mode with the following commands:
 
 
 This mode is useful for quick validation, presentations, and development testing.
+
 
 
 
