@@ -1,5 +1,8 @@
 from settings import settings
 import asyncio
+from logging import getLogger
+import httpx
+logger = getLogger(__name__)
 
 
 
@@ -7,20 +10,27 @@ import asyncio
 from groq import AsyncGroq
 class Groq:
     def __init__(self):
+        
+
         self.client = AsyncGroq(api_key=settings.GROQ_API_KEY)
+        logger.info(f"Groq Client inizializzato. Key presente: {bool(settings.GROQ_API_KEY)}")
 
     async def chat(self, prompt: str):
-        completion = await self.client.chat.completions.create(
-            model="openai/gpt-oss-120b",
-            messages=[
-                {
-                    "role": "user",
-                    "content": prompt,
-                }
-            ],
-        )
+        try:
+            completion = await self.client.chat.completions.create(
+                model="openai/gpt-oss-120b",
+                messages=[
+                    {
+                        "role": "user",
+                        "content": prompt,
+                    }
+                ], 
+            )
 
-        return completion.choices[0].message.content
+            return completion.choices[0].message.content
+        except Exception as e:
+            logger.error(f"LLM: failed to contact the llm: {e}")
+            raise
 
 """
 from openai import OpenAI, AsyncOpenAI

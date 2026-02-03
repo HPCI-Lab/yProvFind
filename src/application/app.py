@@ -5,12 +5,13 @@ from dishka import make_async_container
 from dishka.integrations.fastapi import setup_dishka
 from services.elasticSearch.connection.es_connection import ElasticSearchConnection
 from services.orchestration.RSEI_controller import RSEIController
+from services.embedding.embedder import EmbeddingService
 import logging
 import asyncio
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
 from contextlib import asynccontextmanager
 from settings import settings
-
+from services.metadata_enricher.meta_enricher import MetaEnricher
 
 
 logger = logging.getLogger(__name__)
@@ -35,6 +36,8 @@ def create_lifespan(container):
         async with container() as request_container:
             try:
                 await request_container.get(ElasticSearchConnection)
+                await request_container.get(EmbeddingService)
+                await request_container.get(MetaEnricher)
                 #RSEI_controller = await request_container.get(RSEIController)
                 #await RSEI_controller.RSEI_init()
                 logger.info("Starter successfully completed ")

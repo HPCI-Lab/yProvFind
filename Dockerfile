@@ -1,34 +1,44 @@
 FROM python:3.12-slim
 
-# Copia uv (package manager)
+# Installa CA certificates E strumenti di debug network
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    ca-certificates \
+    curl \
+    dnsutils \
+    iputils-ping \
+    netcat-openbsd \
+    && rm -rf /var/lib/apt/lists/*
+
+# Copia UV
 COPY --from=ghcr.io/astral-sh/uv:latest /uv /uvx /bin/
 
-# Imposta variabili d'ambiente
+# Environment variables
 ENV PYTHONDONTWRITEBYTECODE=1
 ENV PYTHONUNBUFFERED=1
 ENV PYTHONPATH=/app/src
 
-# Imposta la directory di lavoro
+
+
 WORKDIR /app
 
-# Copia file per installare le dipendenze del progetto principale
+# 1. Copia i file di configurazione principali
 COPY pyproject.toml uv.lock ./
 
-# Installa le dipendenze del progetto principale
+# 2. COPIA I METADATI DELLA CLI PRIMA DEL SYNC
+COPY src/cli/pyproject.toml ./src/cli/pyproject.toml
+
+# 3. Sync delle dipendenze
 RUN uv sync --frozen --no-cache
 
-# Copia il codice sorgente
+# 4. Ora copi tutto il codice sorgente
 COPY ./src /app/src
 
-# Installa la CLI come package
+# 5. Installa la CLI in modalità editable
 WORKDIR /app/src/cli
 RUN uv pip install --system -e .
 
-# Torna alla directory principale
 WORKDIR /app
 
-# Espone la porta
 EXPOSE 8002
 
-# Comando per avviare l'app
 CMD ["uv", "run", "src/main.py", "--host", "0.0.0.0", "--port", "8002"]

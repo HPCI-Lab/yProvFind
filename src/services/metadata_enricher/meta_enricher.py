@@ -71,7 +71,9 @@ class MetaEnricher:
             except ValueError: 
                 logger.error("The downloaded file is not a provenace in json format")
                 raise
-
+            except Exception as e:
+                logger.error(f"Enricher: Document download failed: {e} ")
+                raise
     
 
     def _run_analyzer(self, provenance_list:List[Dict])->List[str]:
@@ -99,10 +101,11 @@ class MetaEnricher:
 
     async def llm_call(self, analyzed, metadata):
         """Execute LLM call only if input is not an exception."""
+                    #if the file is an error return the error in the list
+        if isinstance (analyzed, Exception):
+            return analyzed
         async with self.semaphore:
-            #if the file is an error return the error in the list
-            if isinstance (analyzed, Exception):
-                return analyzed
+
             
             meta_description=""
             if metadata.get("_source") and metadata["_source"].get("description"):
@@ -162,6 +165,10 @@ class MetaEnricher:
                     "doc":meta.get("_id"),
                     "error":str(processed)
                 })
+                continue
+
+            if not processed:
+                logger.warning(f"Enricher:LLM returned empty string for {meta.get('_id')}")
                 continue
             
             # Estrazione Descrizione
