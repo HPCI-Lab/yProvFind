@@ -1,13 +1,9 @@
 
 import logging
-from settings import settings
 from typing import List, Dict
-
 from elasticsearch.helpers import async_bulk
-
 from services.elasticSearch.connection.es_connection import ElasticSearchConnection
-from services.scraper.scraper import ScraperService
-from services.embedding.embedder import EmbeddingService
+
 
 
 
@@ -15,10 +11,8 @@ logger =logging.getLogger(__name__)
 
 
 class IndexService():
-    def __init__(self, es_conn: ElasticSearchConnection, scraper: ScraperService, embedder: EmbeddingService):
+    def __init__(self, es_conn: ElasticSearchConnection):
         self.es_conn=es_conn
-        self.scraper=scraper #il fetcher restituisce un generatore (iteratore)
-        self.embedder= embedder
 
 
     async def index_enriched_batch(self, enriched_batch: List[Dict]):

@@ -1,7 +1,7 @@
 import logging 
 from fastapi import  APIRouter, Query, HTTPException
 from dishka.integrations.fastapi import FromDishka, DishkaRoute
-from services.elasticSearch.search_documents.semantic_search import SemanticSearch
+from services.elasticSearch.search_service.semantic_search import SemanticSearch
 from typing import Annotated, List , Dict, Any, Optional
 from pydantic import BaseModel
 from datetime import date
@@ -27,7 +27,7 @@ class SemanticSearchResponse(BaseModel):
 
 
 
-#aggiustare la queri che in questo caso permette di inserire valori a null e da errore
+
 @semantic_query_router.get(
     "/semantic",
     response_model=List[SemanticSearchResponse],

@@ -1,7 +1,7 @@
 from typing import Annotated
 from fastapi import APIRouter, Query
 from dishka.integrations.fastapi import DishkaRoute
-from services.elasticSearch.search_documents.all_documents import AllDocuments
+from services.elasticSearch.search_service.all_documents import AllDocuments
 from dishka.integrations.fastapi import FromDishka
 from typing import Optional
 from datetime import date
