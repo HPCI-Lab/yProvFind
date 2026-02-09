@@ -9,9 +9,10 @@ import re
 #from services.LLM.llm import OpenRouter
 #from services.LLM.llm import Gemini
 
-SEMAPHORE:int = 5
+SEMAPHORE:int = 10
 
 logger = getLogger(__name__)
+
 
 
 

@@ -36,7 +36,7 @@ def indexing_process():
     '--batch-size',
     default=5,
     help='Number of documents per batch (default: 5)',
-    type=click.IntRange(1, 50)
+    type=click.IntRange(1, 100)
 )
 @click.option(
     '--enrich/--no-enrich',
@@ -241,6 +241,11 @@ indexing_process.add_command(errors)
 
 
 
+
+
+
+
+
 def _monitor_process(api_client: APIClient, poll_interval: int):
     """Monitor the process until completion with live updates"""
     
@@ -254,18 +259,20 @@ def _monitor_process(api_client: APIClient, poll_interval: int):
     ) as progress:
         
         task = progress.add_task("[cyan]Indexing...", total=None)
-        last_details = ""
         
         while True:
             try:
                 status_response = api_client.get("/indexing-process/status")
                 status = status_response.get("status", "unknown")
                 details = status_response.get("details", "")
+                indexed = status_response.get("ES_successfully_indexed", 0)
+                error = status_response.get("embed_error", 0)
                 
-                # Update progress description if details changed
-                if details != last_details:
-                    progress.update(task, description=f"[cyan]{details}")
-                    last_details = details
+                # Aggiorna sempre la descrizione
+                progress.update(
+                    task, 
+                    description=f"[cyan]{details}\nIndexed: {indexed} | Errors: {error}"
+                )
                 
                 # Check if process completed
                 if status in ["completed", "error", "interrupted"]:
@@ -273,15 +280,12 @@ def _monitor_process(api_client: APIClient, poll_interval: int):
                     _display_results(status_response)
                     break
                 
-                # Wait before next check
                 time.sleep(poll_interval)
                 
             except APIError as e:
                 progress.stop()
                 console.print(f"\n[red]✗ Error checking status: {str(e)}[/red]")
                 raise click.Abort()
-
-
 
 
 

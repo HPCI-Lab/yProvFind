@@ -40,7 +40,7 @@ async def start_indexing_process(
                                         description="Allows you to insert a delay between one batch and another in seconds"),
     batch_size: Optional[int] = Query(5,
                                     ge=1, # Greater or equal to 1
-                                    le=50, # batch non piu grandi di 50 per non sovracaricare il sistema 
+                                    le=100, # batch non piu grandi di 50 per non sovracaricare il sistema 
                                     description="allows you to decide the size of the provenace documents batch to process"),
     use_enricher: bool = Query(True, description="If it is True use the enricher that call the llm to enrich the metadata")
 ):

@@ -2,13 +2,10 @@ import logging
 from pydantic import BaseModel
 from datetime import date
 from typing import Any, Dict, List, Optional
-from fastapi import  APIRouter, Query, HTTPException
+from fastapi import  APIRouter, Query
 from dishka.integrations.fastapi import FromDishka, DishkaRoute
-from services.elasticSearch.search_documents.full_text_search import FullTextSearch
-from typing import Annotated #annotated è linguaggio standard python e serve per aggiungere metadata ai type hints
-                            # va usato qunado potrebbe andare in conflitto con fastapi, come in questo caso degli endpoint
-                            #invece qunando creiamo classi con l'injection non serve perche __init__ è gestito da dishka
-
+from services.elasticSearch.search_service.full_text_search import FullTextSearch
+from typing import Annotated 
 
 logger= logging.getLogger(__name__)
 
@@ -22,12 +19,9 @@ class FullTextResponse(BaseModel):
     id: str
     score: Optional[float] = None
     source: Dict[str, Any]
-    #explanation: Dict[str, Any]
     other_versions: Optional[List[Dict[str, Any]]] = None
 
 
-#qua usiamo Annotated perche aggiungiamo al type hint "Multi_match_search" il metadata "FromDishka"
-#questo ci serve perche cosi qunado fast aspi va a vedere il tipe hint e legge dai metadati FromDishka lascia gestire la dipendenza a dishka invece che usare le sue
 @query_router.get("/fulltext",     
                     summary="Simple full-text search on the title, description, keywords, author, PID fields",
                     description="Full-text search in Elasticsearch analyzes text by tokenizing and normalizing it, then matches query terms against the tokens. It ranks results using relevance scoring with the BM25 algorithm.",
