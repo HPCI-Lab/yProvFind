@@ -9,3 +9,5 @@ registryList/
 src/yProvFind.egg-info
 src/cli/yprovfind_cli.egg-info
 src/orchestration/last_fetch.json
+
+**.DS_Store

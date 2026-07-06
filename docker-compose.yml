@@ -21,16 +21,32 @@ services:
       retries: 10
       start_period: 30s
 
+  ollama:
+    image: ollama/ollama:latest
+    container_name: ollama
+    ports:
+      - "11434:11434"
+    volumes:
+      - ollama_data:/root/.ollama
+    networks:
+      - elastic-network
+    post_start: 
+      - command: ["ollama", "pull", "qwen3.5:0.8b"]
+
   yprovfind:
     build: .
     container_name: yprovfind2.0
     depends_on:
       elasticsearch:
         condition: service_healthy
+      ollama: 
+        condition: service_started
     env_file:
       - .env
     environment:
       - ELASTICSEARCH_URL=http://elasticsearch:9200
+      - OLLAMA_URL=http://ollama:11434/api/chat
+      - OLLAMA_MODEL=qwen3.5:0.8b
     networks:
       - elastic-network
     ports:
@@ -45,3 +61,4 @@ networks:
 volumes:
   es-data:
   shared-data:
+  ollama_data:

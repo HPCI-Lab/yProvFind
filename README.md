@@ -11,7 +11,7 @@
   - [Use the cli in the docker container](#use-the-cli-in-the-docker-container)
   - [Install the CLI for remote use](#install-the-cli-for-remote-use)
   - [How to use](#how-to-use)
-  - [All command desription](#all-command-desription)
+  - [All command description](#all-command-description)
 
 
 ## **Overview**
@@ -132,11 +132,15 @@ docker compose down
 
 
 ## **yProvFind CLI**
-  abort         Terminate the idexing process
-  errors        List all the errors occurred during the process.
-  start         Start the indexing and semantic enrichment process.
-  status        Check the status of the current indexing process.
-  status-reset  Reset the indexing process status.
+
+```
+abort         Terminate the idexing process
+errors        List all the errors occurred during the process.
+start         Start the indexing and semantic enrichment process.
+status        Check the status of the current indexing process.
+status-reset  Reset the indexing process status.
+```
+
 * ### **All commands**
 ```
 ypfind indexing-process start [--batch-delay <sec>] [--batch-size <int>] [--enrich / --no-enrich] [--no-wait] [--poll-interval <int>]
@@ -236,7 +240,7 @@ On macOS or Linux (shell):
 `export BASE_API_URL="http://127.0.0.1:8002"`
 
 
-* ### **All command desription**
+* ### **All command description**
 #### **1. General**
 To list all available options:
 ```

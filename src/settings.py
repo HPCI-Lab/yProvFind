@@ -1,4 +1,5 @@
 from pydantic_settings import BaseSettings
+from typing import Optional
 
 class Settings(BaseSettings):
     ELASTICSEARCH_URL: str
@@ -23,10 +24,13 @@ class Settings(BaseSettings):
     REGISTRY_BASE_PATH : str = "registryList"
     REGISTRY_FILE_NAME: str = "registryList.json"
 
-    OPENAI_API_KEY:str
-    OPEN_ROUTER:str
-    GEMINI_API_KEY:str
+    OPENAI_API_KEY: Optional[str] = None
+    OPEN_ROUTER: Optional[str] = None
+    GEMINI_API_KEY: Optional[str] = None
     GROQ_API_KEY:str
+
+    OLLAMA_URL: str = "http://host.docker.internal:11434/api/chat"
+    OLLAMA_MODEL: str = "qwen3.5:0.8b"
 
     class Config:
         env_file =".env"
