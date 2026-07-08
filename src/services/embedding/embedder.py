@@ -134,41 +134,93 @@ class EmbeddingService:
     
     def _combine_fields(self, document: Dict) -> str | None:
         """
-        Combina i campi rilevanti del documento in un'unica stringa.
-        
-        Returns:
-            str | None: Testo combinato o None se tutti i campi sono vuoti
+        Combina la struttura PROV-JSON complessa di un esperimento ML 
+        in una stringa descrittiva ottimizzata per modelli di embedding.
         """
         src = document.get('_source', {})
         
-        # Estrai e pulisci campi
-        title = (src.get('title') or '').strip()
-        description = (src.get('description') or '').strip()
-        llm_description = (src.get('llm_description') or '').strip()
-        author = (src.get('author') or '').strip()
-        
-        # Gestisci keywords (può essere stringa o lista)
-        keywords = src.get('keywords') or []
-        if isinstance(keywords, str):
-            keywords = [keywords]
-        elif not isinstance(keywords, list):
-            keywords = []
-        
-        keywords_text = ', '.join([kw.strip() for kw in keywords if isinstance(kw, str) and kw.strip()])
-        
-        # Costruisci testo finale
+        # Se il documento è racchiuso dentro un classico dizionario Elasticsearch, estrailo,
+        # altrimenti leggi direttamente la radice se viene indicizzato il file raw.
+        data = src if any(k in src for k in ['activity', 'entity', 'agent']) else document
+
         parts = []
-        if title:
-            parts.append(f"Title:{title}")
-        if description:
-            parts.append(f"Description: {description}")
-        if llm_description:
-            parts.append(llm_description)
-        if keywords_text:
-            parts.append(f"Keywords: {keywords_text}")
-        if author:
-            parts.append(f"Author: {author}")
-        
+
+        # 1. Estrazione Attività Principale ed Esperimento (Hardware, OS, Runtime)
+        activities = data.get('activity', {})
+        for act_name, act_meta in activities.items():
+            # Identifichiamo il blocco principale dell'esperimento (es. "example_GR0_2")
+            if 'yprov:experiment_name' in act_meta:
+                exp_name = act_meta.get('yprov:experiment_name')
+                py_version = act_meta.get('yprov:python_version', '').split('|')[0].strip()
+                os_system = act_meta.get('yprov:operating_system', '')
+                proc = act_meta.get('yprov:processor', '')
+                
+                parts.append(f"Machine Learning Experiment Name: {exp_name}")
+                if py_version:
+                    parts.append(f"Environment: Running Python {py_version} on {os_system} {proc} hardware Architecture")
+
+        # 2. Estrazione Iperparametri Globali ed Entità (Modelli, Dataset, Configurazione)
+        entities = data.get('entity', {})
+        hyperparams = []
+        datasets_info = []
+        metrics_summary = []
+
+        for ent_name, ent_meta in entities.items():
+            label = ent_meta.get('prov:label', ent_name)
+            value = ent_meta.get('prov:value')
+            prov_type = ent_meta.get('prov:type', '')
+
+            # Raccogli gli iperparametri (es. optimizer, loss, epochs, learning_rate, device)
+            if value and ent_name in ['optimizer', 'loss', 'batch_size', 'epochs', 'learning_rate', 'device']:
+                hyperparams.append(f"{label}: {value}")
+            
+            # Identifica e descrivi i Dataset (Train, Validation, Test)
+            elif 'provml:Dataset' in prov_type:
+                role = ent_meta.get('prov:role', 'dataset')
+                total_samples = ent_meta.get('yprov:train_dataset_stat_total_samples') or \
+                                ent_meta.get('yprov:val_dataset_stat_total_samples') or \
+                                ent_meta.get('yprov:test_dataset_stat_total_samples')
+                if total_samples:
+                    # Estrae il numero pulito rimuovendo l'involucro xsd se presente
+                    if isinstance(total_samples, dict) and '$' in total_samples:
+                        total_samples = total_samples['$']
+                    datasets_info.append(f"{label} ({role}) with {total_samples} total samples")
+
+            # Identifica il Modello Generato ed i suoi Parametri hardware/memoria
+            elif 'provml:Model' in prov_type:
+                identifier = ent_meta.get('dcterms:identifier', 'Model checkpoint')
+                params_key = [k for k in ent_meta.keys() if 'total_params' in k]
+                
+                model_str = f"Output Model Architecture: saved as {identifier}"
+                if params_key:
+                    p_val = ent_meta[params_key[0]]
+                    p_num = p_val.get('$') if isinstance(p_val, dict) else p_val
+                    model_str += f" containing {p_num} weights parameters"
+                parts.append(model_str)
+
+            # Estrazione Statistiche dei Metric Node (Accuracy, MSE Loss per Training/Validazione)
+            elif 'provml:Metric' in prov_type:
+                context = ent_meta.get('yprov:context', '')
+                identifier = ent_meta.get('dcterms:identifier')
+                
+                # Se l'identificatore è un dizionario riassuntivo (contiene mean, std, min, max)
+                if isinstance(identifier, dict) and 'mean' in identifier:
+                    mean_val = identifier.get('mean')
+                    metrics_summary.append(f"{label} in context {context} reached a mean score value of {mean_val:.6f}")
+
+        # Inietta le liste raggruppate all'interno delle stringhe finali del prompt semantico
+        if hyperparams:
+            parts.append(f"Training Hyperparameters configuration: {', '.join(hyperparams)}")
+        if datasets_info:
+            parts.append(f"Datasets utilized: {'; '.join(datasets_info)}")
+        if metrics_summary:
+            parts.append(f"Performance Metrics Summary: {'. '.join(metrics_summary)}")
+
+        # 3. Estrazione dell'autore (Agent)
+        agents = list(data.get('agent', {}).keys())
+        if agents:
+            parts.append(f"Executed and Authored by scientist agent: {', '.join(agents)}")
+
         return '. '.join(parts) if parts else None
         
 

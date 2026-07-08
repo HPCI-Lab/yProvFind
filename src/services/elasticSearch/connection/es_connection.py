@@ -188,7 +188,6 @@ class ElasticSearchConnection: #classe per gestire la connessione a elasticsearc
             exists = await self.client.indices.exists(index=index_name)
             
             if not exists:
-                # AGGIUNGI await QUI
                 await self.client.indices.create(index=index_name, body=mapping)
                 logger.info("First index created")
             else:
