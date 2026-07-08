@@ -3,6 +3,7 @@ import logging
 from dishka.integrations.fastapi import DishkaRoute
 from fastapi.responses import RedirectResponse
 from .search_service.full_text_search import query_router
+from .search_service.agentic_search import agent_router
 from .deleteDoc.deleteDoc_endpoint import delete_router
 from .indexing_process.indexing_process_endpoint import indexing_process
 from .search_service.semantic_search import semantic_query_router
@@ -24,6 +25,7 @@ root_routes = APIRouter(route_class=DishkaRoute)
 
 all_routes : tuple [APIRouter,...] = (
                     query_router,
+                    agent_router,
                     delete_router,
                     indexing_process,
                     semantic_query_router,

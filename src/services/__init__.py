@@ -1,6 +1,6 @@
 from .elasticSearch.connection.es_connection_provider import ElasticSearchService
 from .indexer.index_provider import  IndexerProvider
-from .elasticSearch.search_service.es_search_provider import MultiMatchSearchProvider, SemanticSearchProvider, AllDocumentsProvider
+from .elasticSearch.search_service.es_search_provider import MultiMatchSearchProvider, SemanticSearchProvider, AllDocumentsProvider, AgenticSearchProvider
 from .elasticSearch.delete_documents.delete_provider import delete_provider
 from .embedding.embedding_provider import EmbeddingProvider
 from .scraper.scraper_provider import ScraperProvider
@@ -21,6 +21,7 @@ providers =[ElasticSearchService,
             ScraperProvider,
             IndexerProvider,
             MultiMatchSearchProvider,
+            AgenticSearchProvider,
             delete_provider,
             EmbeddingProvider,
             SemanticSearchProvider,

@@ -2,12 +2,10 @@ from settings import settings
 from services.elasticSearch.connection.es_connection import ElasticSearchConnection
 from services.embedding.embedder import EmbeddingService
 from .full_text_search import FullTextSearch
+from .agentic_search import AgenticSearch
 from .semantic_search import SemanticSearch
 from .all_documents import AllDocuments
 from dishka import Provider, provide, Scope
-
-
-
 
 
 class MultiMatchSearchProvider(Provider):
@@ -26,3 +24,8 @@ class AllDocumentsProvider(Provider):
     @provide(scope=Scope.REQUEST)
     async def all_documents(self, es_conn: ElasticSearchConnection) -> AllDocuments:
         return AllDocuments(es_conn)
+    
+class AgenticSearchProvider(Provider):
+    @provide(scope=Scope.REQUEST)
+    def get_agentic_search(self, es_conn: ElasticSearchConnection) -> AgenticSearch:
+        return AgenticSearch(es_conn)

@@ -1,5 +1,6 @@
 # src/cli/cli/commands/cli_search.py
 import click
+import httpx
 from rich.console import Console
 from rich.table import Table
 from rich.panel import Panel
@@ -15,7 +16,7 @@ console = Console()
 @click.option(
     "--type",
     type=str,
-    help="type of search: ftx (full-text), smt (semantic), hyb (hybrid), knn (semantic Knn)",
+    help="type of search: ftx (full-text), smt (semantic), hyb (hybrid), knn (semantic Knn), agt (agentic)",
 )
 @click.option(
     "--date-from",
@@ -78,48 +79,12 @@ def search(
         Semantic search:
         ypfind search climate --type smt
 
-        Hybrid search:
-        ypfind search climate --type hyb
-
-        Knn search:
-        ypfind search climate --type knn
-
-        Search with date range
-        ypfind search "climate change" --date-from 01-01-2024 --date-to 31-12-2024
-
-        Search specific version
-        ypfind search "climate change" --version 3
-
-        Search from specific instance
-        ypfind search "climate change" --instance http://localhost:8000
-
-        Include other versions
-        ypfind search "climate change" --other-versions
+        Agentic search:
+        ypfind search "fetch all files with the keyword 'doc'" --type agt
     """
     api_client: APIClient = ctx.obj["client"]
     
-    # Costruisci i parametri della query
-    if not limit:
-        limit=10
-
-    params = {
-        "query": query,
-        "page_size":limit,
-        "other_versions": other_versions
-    }
-    
-    # Aggiungi filtri opzionali (solo se specificati)
-    if date_from:
-        params["date_from"] = date_from.strftime("%Y-%m-%d")
-    
-    if date_to:
-        params["date_to"] = date_to.strftime("%Y-%m-%d")
-    
-    if version is not None:
-        params["version"] = version
-    
-    if instance:
-        params["yProvIstance"] = instance
+    if not limit: limit=10
 
     url=""
     search_type=""
@@ -136,16 +101,48 @@ def search(
         case "knn":
             url="/search/knn-fulltext"
             search_type="Search type: knn"
+        case "agt":
+            url="/search/agentic"
+            search_type="Search type: agentic AI"
         case _:
             url="/search/fulltext"
             search_type="Search method typo, full-text default search started"
+
+    if type == "agt":
+        params = {"query": query}
+    else:
+        params = {
+            "query": query,
+            "page_size": limit,
+            "other_versions": other_versions
+        }
+        
+        if date_from:
+            params["date_from"] = date_from.strftime("%Y-%m-%d")
+        if date_to:
+            params["date_to"] = date_to.strftime("%Y-%m-%d")
+        if version is not None:
+            params["version"] = version
+        if instance:
+            params["yProvIstance"] = instance
     
     try:
         with console.status(f"[blue]{search_type}. Searching for '{query}'...", spinner="dots"):
-            response = api_client.get(url, params=params)
+            if type == "agt":
+                base_url = getattr(api_client, "base_url", "http://localhost:8000")
+                base_url = base_url.rstrip("/")
+                response = httpx.get(f"{base_url}{url}", params=params, timeout=None).json()
+            else:
+                response = api_client.get(url, params=params)
         
-        # Mostra i risultati
-        _display_results(response, query)
+        _display_results(response, query, type)
+        
+    except Exception as e:
+        # Catch the httpx error or fallback to the existing handler structure
+        if type == "agt":
+            console.print(f"\n[red]✗ Agentic Search failed - Error: {str(e)}[/red]")
+            raise click.Abort()
+        raise  # Reraise standard errors for ftx, smt, etc. to hit the blocks below
     
     except APIHTTPError as e:
         console.print(f"\n[red]✗ Search failed - Error {e.status_code}[/red]")
@@ -175,7 +172,7 @@ def search(
         console.print(f"\n[red]✗ Error: {str(e)}[/red]")
         raise click.Abort()
 
-def _display_results(results: list, query: str):
+def _display_results(results: list, query: str, type : str):
     """Display search results in a formatted table"""
     
     if not results:
@@ -185,8 +182,11 @@ def _display_results(results: list, query: str):
     # Header
     console.print(f"\n[green]✓ Found {len(results)} result(s) for '{query}'[/green]")
     
-    
-    # Mostra ogni risultato
+    if type == "agt": 
+        response = results["agent_response"]
+        console.print(f"""[bold cyan]Agent response:[/bold cyan] {response} """)
+        results = results["raw_results"]
+
     for i, doc in enumerate(results, 1):
         source = doc.get('source', {})
         score = doc.get('score', 0)
@@ -199,7 +199,6 @@ def _display_results(results: list, query: str):
         date_created = source.get('dateCreated', 'N/A')
         version = source.get('version', 'N/A')
         llm_description = source.get('llm_description', 'N/A')
-        
         
         # Tronca descrizione se troppo lunga
         if description:
@@ -238,8 +237,4 @@ def _display_results(results: list, query: str):
             if len(other_versions) > 3:
                 console.print(f"    [dim]... and {len(other_versions) - 3} more[/dim]")
         
-        console.print()  
-
-
-
-
+        console.print()
