@@ -4,7 +4,7 @@ from .elasticSearch.search_service.es_search_provider import MultiMatchSearchPro
 from .elasticSearch.delete_documents.delete_provider import delete_provider
 from .embedding.embedding_provider import EmbeddingProvider
 from .scraper.scraper_provider import ScraperProvider
-from .registry.registry_provider import RegisryProvider
+from .registry.registry_provider import RegistryProvider
 from .orchestration.RSEI_provider import RSEIProvider
 from .orchestration.last_check_timestamp import TimestamProvider
 from .elasticSearch.index_manager.index_manager_provider import IndexManagerProvider
@@ -24,7 +24,7 @@ providers =[ElasticSearchService,
             delete_provider,
             EmbeddingProvider,
             SemanticSearchProvider,
-            RegisryProvider,
+            RegistryProvider,
             RSEIProvider,
             TimestamProvider,
             AllDocumentsProvider,

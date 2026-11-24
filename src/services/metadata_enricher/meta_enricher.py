@@ -3,7 +3,7 @@ from typing import List, Dict
 import httpx
 import asyncio
 from logging import getLogger
-from services.LLM.llm import Groq
+from services.LLM.llm import LlmHandler
 import re 
 
 #from services.LLM.llm import OpenRouter
@@ -50,11 +50,19 @@ Input Text:
 
 
 class MetaEnricher:
-    def __init__(self, analyzer: ProvAnalyzer, llm: Groq):
+    def __init__(self, analyzer: ProvAnalyzer, llm: LlmHandler):
         self.analyzer=analyzer
         self.llm = llm
         self.client=httpx.AsyncClient()
         self.semaphore=asyncio.Semaphore(SEMAPHORE)
+
+    async def check_model(self) -> None:
+        if not self.llm.key_and_model_check():
+            raise ValueError("LLM provider, model, or API key has not been configured.")
+
+        is_active = await self.llm.check_if_the_model_is_active()
+        if not is_active:
+            raise RuntimeError("The configured LLM model is not active or did not respond. Verify that the key and the data provided for the model calls are correct.")
     
     async def _download_doc(self, doc: Dict):
         link=doc["_source"].get("storage_url")

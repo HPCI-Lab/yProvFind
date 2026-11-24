@@ -1,6 +1,5 @@
 import logging
 from services.elasticSearch.connection.es_connection import ElasticSearchConnection
-from dishka import Provider, provide, Scope
 from settings import settings
 from fastapi import HTTPException
 

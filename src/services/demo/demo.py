@@ -138,5 +138,5 @@ class Demo:
 
 class DemoProvider(Provider):
     @provide(scope= Scope.REQUEST)
-    def demo_prvider(self ,es_conn:ElasticSearchConnection, embedder: EmbeddingService, indexer: IndexService)-> Demo:
+    def demo_provider(self ,es_conn:ElasticSearchConnection, embedder: EmbeddingService, indexer: IndexService)-> Demo:
         return Demo(es_conn, embedder, indexer)

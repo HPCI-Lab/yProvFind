@@ -6,17 +6,24 @@ from dishka import Provider, provide, Scope
 import logging
 from typing import List
 from fastapi import HTTPException
+from settings import settings
 
 logger = logging.getLogger(__name__)
 
 
 class TimestampManager:
-    def __init__ (self, file_path: str = "last_fetch.json"):
-        # cartella dove si trova questo file .py
-        base_dir = Path(__file__).resolve().parent
-        self.file_path = base_dir / file_path
-       
-        self.file_path.parent.mkdir(parents=True, exist_ok=True)
+    def __init__(self, file_name: str = "last_fetch.json"):
+            configured_path = Path(settings.REGISTRY_BASE_PATH)
+
+            if configured_path.is_absolute():
+                registry_dir = configured_path
+            else:
+                # .../src/services/orchestrator/timestamp.py -> .parents[3] è la root del progetto
+                project_root = Path(__file__).resolve().parents[3]
+                registry_dir = project_root / configured_path
+
+            registry_dir.mkdir(parents=True, exist_ok=True)
+            self.file_path = registry_dir / file_name
 
     def get_last_fetch(self, address: str) -> str:
         """Legge ultimo timestamp o None se prima volta"""

@@ -91,7 +91,7 @@ class ScraperService:
             successful_metadata = sum(1 for m in metadatas if not isinstance(m, Exception))
             logger.info(f"Metadata retrieved: {successful_metadata}/{len(metadatas)} for {base_url}")
             
-            results = []
+            results = [] 
             #v1_list={} #ritorno id dei parenti pid di tutti i documenti che hanno versione 2 perche deve essere modificata la lineage dei loro parent pid
             for doc, metadata in zip(batch, metadatas):
                 # Se metadata è un'eccezione, usa valori vuoti

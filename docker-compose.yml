@@ -31,12 +31,13 @@ services:
       - .env
     environment:
       - ELASTICSEARCH_URL=http://elasticsearch:9200
+      - REGISTRY_BASE_PATH=/app/controlFiles
     networks:
       - elastic-network
     ports:
       - 8002:8002
     volumes:
-      - ./registryList:/app/registryList
+      - ./controlFiles:/app/controlFiles
 
 networks:
   elastic-network:
@@ -44,4 +45,3 @@ networks:
 
 volumes:
   es-data:
-  shared-data:

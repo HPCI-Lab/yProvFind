@@ -29,7 +29,7 @@ def create_lifespan(container):
                 await RSEI_controller.RSEI_init()
                 logger.info("RSEI process successfully completed")
             except Exception as e:
-                logger.exception(f"An error occurred during the SFEI process: {e}")
+                logger.exception(f"An error occurred during the RSEI process: {e}")
     
     async def _starter():
         """Performs full initial setup (startup only)"""
@@ -56,14 +56,14 @@ def create_lifespan(container):
         scheduler.add_job(
             _run_rsei_init,
             'interval',
-            hours=settings.SCHEDULER_INTERVAL_HOURS,
-            #minutes=2,  # per test
+            #hours=settings.SCHEDULER_INTERVAL_HOURS,
+            minutes=settings.SCHEDULER_INTERVAL_MINUTES,  
             id='rsei_init_job',
             replace_existing=True
         )
         
         scheduler.start()
-        logger.info(f"Application ready - SFEI_init scheduled every {settings.SCHEDULER_INTERVAL_HOURS} hours")
+        logger.info(f"Application ready - SFEI_init scheduled every {settings.SCHEDULER_INTERVAL_MINUTES} minutes")
         
         yield
         

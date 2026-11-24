@@ -6,27 +6,25 @@ class Settings(BaseSettings):
     ES_PASSWORD: str
     INDEX_NAME: str = "documents"   
 
-    USE_ENRICHER_LLM: bool = True
+    USE_ENRICHER_LLM: bool = False
     
-    
-
     PAGE: int = 0
-    BATCH_SIZE: int = 5
+    BATCH_SIZE: int = 20
+    BATCH_DELAY: int = 0
 
 
     USE_LOCAL_EMBEDDER:bool= False
 
-    SCHEDULER_INTERVAL_HOURS: int = 4 
+
+    #SCHEDULER_INTERVAL_HOURS: int = 4 
+    SCHEDULER_INTERVAL_MINUTES: int = 20
 
     STAC_BASE_PATH: str = "STAC"
 
-    REGISTRY_BASE_PATH : str = "registryList"
+    REGISTRY_BASE_PATH : str = "controlFiles"
     REGISTRY_FILE_NAME: str = "registryList.json"
 
-    OPENAI_API_KEY:str
-    OPEN_ROUTER:str
-    GEMINI_API_KEY:str
-    GROQ_API_KEY:str
+    LLM_API_KEY:str
 
     class Config:
         env_file =".env"

@@ -58,7 +58,7 @@ class RSEIController():
         
 
 
-    async def RSEI_init(self, batch_delay:int=0, batch_size:int=settings.BATCH_SIZE, use_enricher:bool=settings.USE_ENRICHER_LLM):
+    async def RSEI_init(self, batch_delay:int=settings.BATCH_DELAY, batch_size:int=settings.BATCH_SIZE, use_enricher:bool=settings.USE_ENRICHER_LLM):
         self.interrupt_process=False
         self.batch_delay=batch_delay
         self.batch_size =batch_size
@@ -69,7 +69,16 @@ class RSEIController():
         es_total_errors:List[Dict]  = []
         embed_total_errors: List[Dict] = []
         first_time=True
+
         
+        if self.use_enricher_llm:
+            try:
+                await self.enricher.check_model()
+            except Exception as e:
+                error_msg = f"Enricher LLM check failed: {e}"
+                await self.status.interrupt_process(error_msg)
+                logger.error(error_msg)
+                return
         try: 
             # Registry
             await self.status.start_process()
@@ -125,10 +134,12 @@ class RSEIController():
 
                             
 
-                            
+                            """
                             # STAC catalog update
                             await asyncio.to_thread(self.STACManager.catalogListUpdate, enriched_batch)
-                            
+                            """
+                             
+                            #at the first batch do not use delay if there is
                             first_time=False
 
                             #update the status after every batch 

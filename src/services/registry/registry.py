@@ -36,6 +36,9 @@ class RegistryService():
     async def update_active_list(self) -> List[str]:
         """Return the list of active addresses after the healt check for each one"""
         try:
+            #reload the list from the file json in the case it has been modified manualy
+            self.all_dict_list= self._list_load()
+            
             await self.check_avaibility()
             return self.active_list
         except Exception as e: 
@@ -52,6 +55,7 @@ class RegistryService():
     def get_all_list(self)->Dict[str, Dict]:
         """Return all the addresses saved"""
         try:
+            self.all_dict_list= self._list_load()
             return self.all_dict_list
         except Exception as e: 
             raise HTTPException(status_code=500, detail=f"Registry internal error: {str(e)}")

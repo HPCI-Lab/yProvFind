@@ -1,12 +1,58 @@
 from settings import settings
-import asyncio
 from logging import getLogger
-import httpx
 logger = getLogger(__name__)
+import litellm
 
 
 
+class LlmHandler:
+    def __init__(self, provider:str=None, model:str=None, key:str=None):
+        """start with an empty istance of llm, the user must select the provider and the model"""
+        self.provider=provider
+        self.model=model
+        self.key=key
 
+    def update_config_llm(self,provider,model,key):
+        """Method for updating configuration and key on the fly without recreating the class"""
+        self.provider=provider
+        self.model=model
+        self.key=key
+
+    def key_and_model_check(self) -> bool:
+        return all([self.provider, self.key, self.model])
+
+    async def check_if_the_model_is_active(self, timeout: float = 10.0) -> bool:
+        try:
+            await litellm.acompletion(
+                model=f"{self.provider}/{self.model}",
+                messages=[{"role": "user", "content": "hi"}],
+                api_key=self.key,
+                max_tokens=100,
+                timeout=timeout,
+            )
+            return True
+        except Exception as exc:
+            logger.error(
+                "The model is not responding; please verify that the key and the data "
+                f"provided for the model calls are correct. Error: {type(exc).__name__}"
+            )
+            return False
+        
+
+    async def chat(self, prompt):
+        if not self.provider or not self.key or not self.model:
+            raise ValueError("The service APIs or the model have not been set.")
+
+        response = litellm.completion(
+            model=f"{self.provider}/{self.model}",
+            messages=[{"role": "user", "content": prompt}],
+            api_key=self.key
+        )
+        return response.choices[0].message.content
+
+
+
+"""
 from groq import AsyncGroq
 class Groq:
     def __init__(self):
@@ -31,7 +77,7 @@ class Groq:
         except Exception as e:
             logger.error(f"LLM: failed to contact the llm: {e}")
             raise
-
+"""
 """
 from openai import OpenAI, AsyncOpenAI
 class OpenRouter:

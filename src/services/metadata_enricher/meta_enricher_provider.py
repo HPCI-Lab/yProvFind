@@ -1,6 +1,6 @@
 from .meta_enricher import MetaEnricher
 from .prov_analyzer import ProvAnalyzer
-from services.LLM.llm import Groq
+from services.LLM.llm import LlmHandler
 from typing import AsyncIterator
 from dishka import provide, Scope, Provider
 #from services.LLM.llm import OpenRouter
@@ -9,7 +9,7 @@ from dishka import provide, Scope, Provider
 
 class MetaEnricherProvider(Provider):
     @provide(scope=Scope.APP)
-    async def enricher_provider(self, analyzer: ProvAnalyzer, llm: Groq)->AsyncIterator[MetaEnricher]:
+    async def enricher_provider(self, analyzer: ProvAnalyzer, llm: LlmHandler)->AsyncIterator[MetaEnricher]:
         meta_enricher=MetaEnricher(analyzer, llm)
         try:
             yield meta_enricher
